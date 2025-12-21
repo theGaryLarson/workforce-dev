@@ -51,7 +51,7 @@ Sandbox experimentation, vendor consoles, and external tooling may be used durin
 ## Repository Structure
 
 ```
-agentic-systems/
+agentic_systems/
 ├── core/                       # Deterministic, platform-agnostic logic
 │   ├── canonical/              # CDM + canonicalization logic
 │   ├── ingestion/              # Partner file ingestion

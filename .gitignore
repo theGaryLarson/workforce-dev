@@ -1,0 +1,66 @@
+
+.idea/
+.mock_salt
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Word temporary files
+~$*.docx
+~$*.doc
+
+# planning docs
+agentic_systems/docs/*.docx
+agentic_systems/docs/*.doc
+agentic_systems/docs/*.md
+
+# mock scripts
+agentic_systems/scripts/mock_dynamics_import.py
+agentic_systems/scripts/mock_quarterly_report_data.py
+agentic_systems/scripts/mock_wsac_bulk_upload.py
+
+# other LLM docs
+agents.md
+CONVENTIONS.md
+CLAUDE.md
+GEMINI.md
+best_practices.md
+cfa-applied-agentic-ai.code-workspace
+.cursor/*
