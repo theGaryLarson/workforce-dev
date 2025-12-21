@@ -1,0 +1,9 @@
+{
+  "run_id": "demo-Q1-minimal",
+  "agent": "SimpleIntakeAgent",
+  "platform": "minimal",
+  "data_classification": "Internal",
+  "pii_handling": "redacted",
+  "model": null,
+  "egress_approval_ref": null
+}

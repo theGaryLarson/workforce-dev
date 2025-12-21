@@ -1,0 +1,1345 @@
+row_index,field,severity,message
+0,current_program_status,Error,Participant marked active past graduation date
+0,address_2,Warning,Optional field address_2 is empty
+0,type_of_disability,Warning,Optional field type_of_disability is empty
+0,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+0,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+0,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+0,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+0,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+0,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+1,middle_name,Warning,Optional field middle_name is empty
+1,address_2,Warning,Optional field address_2 is empty
+1,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+1,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+1,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+1,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+1,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+1,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+1,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+1,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+1,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+1,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+2,current_program_status,Error,Participant marked active past graduation date
+2,middle_name,Warning,Optional field middle_name is empty
+2,address_2,Warning,Optional field address_2 is empty
+2,type_of_disability,Warning,Optional field type_of_disability is empty
+2,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+2,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+2,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+2,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+2,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+2,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+2,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+2,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+2,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+2,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+2,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+2,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+3,middle_name,Warning,Optional field middle_name is empty
+3,address_2,Warning,Optional field address_2 is empty
+3,type_of_disability,Warning,Optional field type_of_disability is empty
+3,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+3,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+3,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+3,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+3,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+3,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+3,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+3,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+3,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+4,address_2,Warning,Optional field address_2 is empty
+4,type_of_disability,Warning,Optional field type_of_disability is empty
+4,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+4,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+4,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+4,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+4,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+4,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+4,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+4,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+4,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+4,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+4,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+5,current_program_status,Error,Participant marked active past graduation date
+5,middle_name,Warning,Optional field middle_name is empty
+5,address_2,Warning,Optional field address_2 is empty
+5,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+5,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+5,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+5,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+5,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+5,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+5,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+5,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+5,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+5,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+5,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+5,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+6,current_program_status,Error,Participant marked active past graduation date
+6,address_2,Warning,Optional field address_2 is empty
+6,type_of_disability,Warning,Optional field type_of_disability is empty
+6,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+6,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+6,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+6,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+6,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+6,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+6,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+6,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+6,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+6,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+6,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+6,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+7,current_program_status,Error,Participant marked active past graduation date
+7,middle_name,Warning,Optional field middle_name is empty
+7,type_of_disability,Warning,Optional field type_of_disability is empty
+7,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+7,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+7,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+7,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+7,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+7,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+7,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+7,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+7,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+7,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+7,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+7,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+7,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+8,address_2,Warning,Optional field address_2 is empty
+8,type_of_disability,Warning,Optional field type_of_disability is empty
+8,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+8,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+8,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+8,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+8,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+8,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+8,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+8,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+8,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+8,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+8,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+8,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+9,current_program_status,Error,Participant marked active past graduation date
+9,middle_name,Warning,Optional field middle_name is empty
+9,address_2,Warning,Optional field address_2 is empty
+9,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+9,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+9,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+9,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+9,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+9,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+9,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+9,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+9,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+9,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+9,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+9,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+10,current_program_status,Error,Participant marked active past graduation date
+10,middle_name,Warning,Optional field middle_name is empty
+10,address_2,Warning,Optional field address_2 is empty
+10,type_of_disability,Warning,Optional field type_of_disability is empty
+10,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+10,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+10,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+10,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+10,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+10,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+10,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+10,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+10,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+10,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+10,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+10,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+10,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+11,address_2,Warning,Optional field address_2 is empty
+11,type_of_disability,Warning,Optional field type_of_disability is empty
+11,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+11,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+11,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+11,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+11,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+11,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+11,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+11,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+11,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+11,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+11,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+12,current_program_status,Error,Participant marked active past graduation date
+12,middle_name,Warning,Optional field middle_name is empty
+12,address_2,Warning,Optional field address_2 is empty
+12,type_of_disability,Warning,Optional field type_of_disability is empty
+12,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+12,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+12,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+12,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+12,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+12,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+12,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+12,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+12,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+12,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+12,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+13,type_of_disability,Warning,Optional field type_of_disability is empty
+13,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+13,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+13,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+13,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+13,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+13,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+13,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+13,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+13,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+13,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+13,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+14,address_2,Warning,Optional field address_2 is empty
+14,type_of_disability,Warning,Optional field type_of_disability is empty
+14,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+14,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+14,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+14,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+14,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+14,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+14,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+14,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+14,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+14,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+14,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+14,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+15,current_program_status,Error,Participant marked active past graduation date
+15,middle_name,Warning,Optional field middle_name is empty
+15,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+15,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+15,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+15,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+15,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+15,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+15,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+15,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+15,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+15,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+15,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+15,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+16,zip_code,Warning,"Zip code may not match WA state (WA zips typically start with 98 or 99, found: 60xx)"
+16,middle_name,Warning,Optional field middle_name is empty
+16,type_of_disability,Warning,Optional field type_of_disability is empty
+16,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+16,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+16,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+16,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+16,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+16,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+16,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+16,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+16,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+16,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+16,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+16,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+17,current_program_status,Error,Participant marked active past graduation date
+17,middle_name,Warning,Optional field middle_name is empty
+17,type_of_disability,Warning,Optional field type_of_disability is empty
+17,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+17,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+17,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+17,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+17,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+17,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+17,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+17,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+17,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+17,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+17,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+18,current_program_status,Error,Participant marked active past graduation date
+18,middle_name,Warning,Optional field middle_name is empty
+18,address_2,Warning,Optional field address_2 is empty
+18,type_of_disability,Warning,Optional field type_of_disability is empty
+18,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+18,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+18,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+18,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+18,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+18,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+18,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+18,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+18,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+18,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+18,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+18,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+18,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+19,middle_name,Warning,Optional field middle_name is empty
+19,address_2,Warning,Optional field address_2 is empty
+19,type_of_disability,Warning,Optional field type_of_disability is empty
+19,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+19,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+19,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+19,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+20,current_program_status,Error,Participant marked active past graduation date
+20,middle_name,Warning,Optional field middle_name is empty
+20,address_2,Warning,Optional field address_2 is empty
+20,type_of_disability,Warning,Optional field type_of_disability is empty
+20,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+20,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+20,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+20,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+20,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+20,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+20,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+20,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+20,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+20,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+20,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+20,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+20,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+21,middle_name,Warning,Optional field middle_name is empty
+21,address_2,Warning,Optional field address_2 is empty
+21,type_of_disability,Warning,Optional field type_of_disability is empty
+21,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+21,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+21,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+21,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+21,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+21,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+22,address_2,Warning,Optional field address_2 is empty
+22,type_of_disability,Warning,Optional field type_of_disability is empty
+22,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+22,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+22,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+22,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+22,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+22,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+22,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+22,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+22,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+22,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+22,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+23,current_program_status,Error,Participant marked active past graduation date
+23,address_2,Warning,Optional field address_2 is empty
+23,type_of_disability,Warning,Optional field type_of_disability is empty
+23,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+23,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+23,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+23,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+23,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+23,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+23,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+23,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+23,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+23,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+23,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+23,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+23,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+24,middle_name,Warning,Optional field middle_name is empty
+24,type_of_disability,Warning,Optional field type_of_disability is empty
+24,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+24,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+24,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+24,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+24,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+24,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+24,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+25,zip_code,Error,"Invalid zip code format: must be 5 digits or 5+4 format (e.g., 12345 or 12345-6789), found: '981000000...'"
+25,type_of_disability,Warning,Optional field type_of_disability is empty
+25,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+25,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+25,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+25,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+25,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+25,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+25,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+25,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+25,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+25,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+25,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+25,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+26,current_program_status,Error,Participant marked active past graduation date
+26,middle_name,Warning,Optional field middle_name is empty
+26,address_2,Warning,Optional field address_2 is empty
+26,type_of_disability,Warning,Optional field type_of_disability is empty
+26,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+26,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+26,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+26,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+26,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+26,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+26,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+26,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+26,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+26,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+26,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+26,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+27,middle_name,Warning,Optional field middle_name is empty
+27,address_2,Warning,Optional field address_2 is empty
+27,type_of_disability,Warning,Optional field type_of_disability is empty
+27,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+27,training_exit_date____,Warning,Optional field training_exit_date____ is empty
+27,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+27,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+27,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+27,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+27,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+27,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+27,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+27,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+27,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+28,middle_name,Warning,Optional field middle_name is empty
+28,address_2,Warning,Optional field address_2 is empty
+28,type_of_disability,Warning,Optional field type_of_disability is empty
+28,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+28,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+28,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+28,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+28,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+28,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+28,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+28,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+28,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+28,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+28,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+29,middle_name,Warning,Optional field middle_name is empty
+29,address_2,Warning,Optional field address_2 is empty
+29,type_of_disability,Warning,Optional field type_of_disability is empty
+29,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+29,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+29,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+29,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+29,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+29,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+29,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+29,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+29,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+29,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+29,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+29,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+29,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+30,middle_name,Warning,Optional field middle_name is empty
+30,type_of_disability,Warning,Optional field type_of_disability is empty
+30,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+30,training_exit_date____,Warning,Optional field training_exit_date____ is empty
+30,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+30,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+30,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+30,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+30,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+30,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+30,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+30,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+30,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+30,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+31,zip_code,Warning,"Zip code may not match WA state (WA zips typically start with 98 or 99, found: 94xx)"
+31,address_2,Warning,Optional field address_2 is empty
+31,type_of_disability,Warning,Optional field type_of_disability is empty
+31,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+31,training_exit_date____,Warning,Optional field training_exit_date____ is empty
+31,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+31,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+31,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+31,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+31,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+32,middle_name,Warning,Optional field middle_name is empty
+32,address_2,Warning,Optional field address_2 is empty
+32,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+32,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+32,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+32,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+32,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+32,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+32,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+32,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+32,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+32,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+33,current_program_status,Error,Participant marked active past graduation date
+33,address_2,Warning,Optional field address_2 is empty
+33,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+33,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+33,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+33,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+33,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+33,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+33,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+33,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+33,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+33,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+33,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+33,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+34,current_program_status,Error,Participant marked active past graduation date
+34,middle_name,Warning,Optional field middle_name is empty
+34,address_2,Warning,Optional field address_2 is empty
+34,type_of_disability,Warning,Optional field type_of_disability is empty
+34,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+34,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+34,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+34,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+34,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+34,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+34,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+34,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+34,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+34,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+34,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+34,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+34,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+35,address_2,Warning,Optional field address_2 is empty
+35,type_of_disability,Warning,Optional field type_of_disability is empty
+35,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+35,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+35,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+35,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+35,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+35,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+35,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+35,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+35,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+35,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+35,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+35,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+35,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+36,middle_name,Warning,Optional field middle_name is empty
+36,address_2,Warning,Optional field address_2 is empty
+36,type_of_disability,Warning,Optional field type_of_disability is empty
+36,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+36,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+36,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+36,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+36,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+36,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+36,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+37,middle_name,Warning,Optional field middle_name is empty
+37,address_2,Warning,Optional field address_2 is empty
+37,type_of_disability,Warning,Optional field type_of_disability is empty
+37,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+37,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+37,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+37,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+37,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+37,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+38,current_program_status,Error,Participant marked active past graduation date
+38,middle_name,Warning,Optional field middle_name is empty
+38,address_2,Warning,Optional field address_2 is empty
+38,type_of_disability,Warning,Optional field type_of_disability is empty
+38,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+38,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+38,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+38,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+38,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+38,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+38,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+38,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+38,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+38,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+38,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+38,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+38,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+39,middle_name,Warning,Optional field middle_name is empty
+39,address_2,Warning,Optional field address_2 is empty
+39,type_of_disability,Warning,Optional field type_of_disability is empty
+39,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+39,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+39,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+39,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+39,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+39,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+39,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+39,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+39,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+39,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+39,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+39,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+40,current_program_status,Error,Participant marked active past graduation date
+40,address_2,Warning,Optional field address_2 is empty
+40,type_of_disability,Warning,Optional field type_of_disability is empty
+40,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+40,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+40,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+40,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+40,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+40,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+40,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+41,current_program_status,Error,Participant marked active past graduation date
+41,address_2,Warning,Optional field address_2 is empty
+41,type_of_disability,Warning,Optional field type_of_disability is empty
+41,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+41,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+41,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+41,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+41,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+41,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+41,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+41,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+41,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+41,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+41,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+41,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+41,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+42,current_program_status,Error,Participant marked active past graduation date
+42,type_of_disability,Warning,Optional field type_of_disability is empty
+42,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+42,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+42,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+42,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+42,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+42,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+42,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+42,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+42,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+42,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+42,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+42,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+42,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+43,current_program_status,Error,Participant marked active past graduation date
+43,middle_name,Warning,Optional field middle_name is empty
+43,address_2,Warning,Optional field address_2 is empty
+43,type_of_disability,Warning,Optional field type_of_disability is empty
+43,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+43,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+43,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+43,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+43,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+43,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+43,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+43,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+43,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+43,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+43,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+43,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+43,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+44,address_2,Warning,Optional field address_2 is empty
+44,type_of_disability,Warning,Optional field type_of_disability is empty
+44,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+44,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+44,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+44,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+44,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+44,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+44,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+45,middle_name,Warning,Optional field middle_name is empty
+45,address_2,Warning,Optional field address_2 is empty
+45,type_of_disability,Warning,Optional field type_of_disability is empty
+45,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+45,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+45,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+45,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+45,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+45,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+45,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+45,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+45,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+45,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+45,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+45,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+45,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+46,current_program_status,Error,Participant marked active past graduation date
+46,middle_name,Warning,Optional field middle_name is empty
+46,address_2,Warning,Optional field address_2 is empty
+46,type_of_disability,Warning,Optional field type_of_disability is empty
+46,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+46,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+46,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+46,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+46,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+46,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+46,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+46,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+46,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+46,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+46,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+46,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+46,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+47,current_program_status,Error,Participant marked active past graduation date
+47,middle_name,Warning,Optional field middle_name is empty
+47,address_2,Warning,Optional field address_2 is empty
+47,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+47,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+47,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+47,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+47,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+47,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+47,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+47,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+47,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+47,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+47,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+47,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+47,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+48,current_program_status,Error,Participant marked active past graduation date
+48,middle_name,Warning,Optional field middle_name is empty
+48,address_2,Warning,Optional field address_2 is empty
+48,type_of_disability,Warning,Optional field type_of_disability is empty
+48,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+48,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+48,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+48,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+48,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+48,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+48,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+48,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+48,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+48,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+48,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+48,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
+49,date_of_birth,Error,Required field date_of_birth is empty
+49,middle_name,Warning,Optional field middle_name is empty
+49,address_2,Warning,Optional field address_2 is empty
+49,city,Warning,Optional field city is empty
+49,state,Warning,Optional field state is empty
+49,gender,Warning,Optional field gender is empty
+49,ethnicity,Warning,Optional field ethnicity is empty
+49,race,Warning,Optional field race is empty
+49,disability,Warning,Optional field disability is empty
+49,type_of_disability,Warning,Optional field type_of_disability is empty
+49,"if_type_of_disability_is_""other"",_please_specify",Warning,"Optional field if_type_of_disability_is_""other"",_please_specify is empty"
+49,veteran,Warning,Optional field veteran is empty
+49,highest_completed_education_level,Warning,Optional field highest_completed_education_level is empty
+49,"other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records",Warning,"Optional field other_priority_populations_list
+list_all_letters_that_apply_:
+_covid-impacted_workers
+_underemployed_workers
+_long-term_unemployed
+_short-term_unemployed_individuals
+_incumbent_workers
+_people_living_in_rural_communities
+_people_living_in_coal_communities
+_military_spouses
+_disconnected_youth
+_individuals_in_substance_abuse_recovery
+_individuals_participating_in_tanf,_snap,_wic
+_individuals_with_past_criminal_records is empty"
+49,tech_role/pathway_targeted,Warning,Optional field tech_role/pathway_targeted is empty
+49,training_start_date_,Warning,Optional field training_start_date_ is empty
+49,training_exit_date____,Warning,Optional field training_exit_date____ is empty
+49,current_program_status,Warning,Optional field current_program_status is empty
+49,"if_graduated/completed,_type_of_completion",Warning,"Optional field if_graduated/completed,_type_of_completion is empty"
+49,"if_a_noncompletion_,_provide_reason",Warning,"Optional field if_a_noncompletion_,_provide_reason is empty"
+49,"if_the_reason_for_noncompletion_is_""other"",_please_specify",Warning,"Optional field if_the_reason_for_noncompletion_is_""other"",_please_specify is empty"
+49,newly_offered_admittance_this_quarter?,Warning,Optional field newly_offered_admittance_this_quarter? is empty
+49,newly_enrolled__in_program_this_quarter?,Warning,Optional field newly_enrolled__in_program_this_quarter? is empty
+49,newly_completed_program_this_quarter?,Warning,Optional field newly_completed_program_this_quarter? is empty
+49,newly_withdrawn_/_terminated_this_quarter?,Warning,Optional field newly_withdrawn_/_terminated_this_quarter? is empty
+49,employment_status,Warning,Optional field employment_status is empty
+49,newly_employed_this_quarter?,Warning,Optional field newly_employed_this_quarter? is empty
+49,"if_employed,_job_start_date",Warning,"Optional field if_employed,_job_start_date is empty"
+49,"if_employed,_employment_type",Warning,"Optional field if_employed,_employment_type is empty"
+49,"if_earn_and_learn_employment,_specify_type",Warning,"Optional field if_earn_and_learn_employment,_specify_type is empty"
+49,"if_employed,_job_occupation",Warning,"Optional field if_employed,_job_occupation is empty"
+49,if_the_job_occupation_is_'other_computer_occupations'_please_specify,Warning,Optional field if_the_job_occupation_is_'other_computer_occupations'_please_specify is empty
+49,"if_employed,_employer_name",Warning,"Optional field if_employed,_employer_name is empty"
+49,"if_employed,_hourly_earnings",Warning,"Optional field if_employed,_hourly_earnings is empty"
+49,"wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other",Warning,"Optional field wraparound_services_provided_this_quarter
+list_all_letters_that_apply_:
+_transportation
+_childcare
+_career_services_and_learning_materials
+_mental_health_services
+_life_skills
+_navigation
+_other is empty"
+49,"if_any_other_wraparound_service_was_provided_this_quarter,_please_specify",Warning,"Optional field if_any_other_wraparound_service_was_provided_this_quarter,_please_specify is empty"
