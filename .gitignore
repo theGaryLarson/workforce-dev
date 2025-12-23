@@ -55,6 +55,7 @@ agentic_systems/docs/*.md
 agentic_systems/scripts/mock_dynamics_import.py
 agentic_systems/scripts/mock_quarterly_report_data.py
 agentic_systems/scripts/mock_wsac_bulk_upload.py
+agentic_systems/scripts/create_corrected_csv.py
 
 # other LLM docs
 agents.md
@@ -64,3 +65,14 @@ GEMINI.md
 best_practices.md
 cfa-applied-agentic-ai.code-workspace
 .cursor/*
+
+agentic_systems/docs/Example Quarterly Data Report.mock_validated.xlsx
+agentic_systems/docs/version2 1.py
+agentic_systems/docs/version2_3.py
+
+# Evidence bundles (exclude run outputs, keep directory structure)
+agentic_systems/core/audit/runs/*
+
+# Coverage files
+.coverage
+htmlcov/
