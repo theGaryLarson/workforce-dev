@@ -61,12 +61,8 @@ class IngestPartnerFileTool:
                     blockers=[f"File format {path.suffix} not supported. Expected CSV or Excel."]
                 )
             
-            # Normalize column names (lowercase, replace spaces) per BRD FR-001
-            df.columns = df.columns.str.lower().str.replace(' ', '_', regex=False)
-            # Remove parentheses and their contents (e.g., "(MM/DD/YYYY)" -> "")
-            df.columns = df.columns.str.replace(r'\([^)]*\)', '', regex=True)
-            # Remove trailing underscores and whitespace
-            df.columns = df.columns.str.strip('_').str.strip()
+            # Clean up headers (whitespace only) to preserve original sheet names for validator
+            df.columns = df.columns.str.strip()
             
             # Preserve zip codes as strings (prevent pandas from converting to float)
             # Find zip code column(s) - may be named 'zip_code', 'zip', etc.
