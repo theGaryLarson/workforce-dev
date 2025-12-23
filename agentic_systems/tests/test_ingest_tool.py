@@ -1,4 +1,4 @@
-"""Unit tests for IngestPartnerFileTool per PRD-TRD Section 10.1."""
+"""Unit tests for IngestPartnerFileTool per updated header preservation rules."""
 
 import hashlib
 import tempfile
@@ -33,24 +33,22 @@ class TestIngestPartnerFileTool:
         df = result.data['dataframe']
         assert isinstance(df, pd.DataFrame), "Data must be a DataFrame"
         assert len(df) == 3, "Should ingest 3 rows"
-        assert 'first_name' in df.columns, "Column names should be normalized"
-        assert 'last_name' in df.columns, "Column names should be normalized"
+        
+        # Headers should be preserved (stripped of whitespace but not normalized)
+        assert 'First Name' in df.columns
+        assert 'Last Name' in df.columns
 
-    def test_column_normalization(self, sample_csv_file):
-        """Test column name normalization (lowercase, replace spaces)."""
+    def test_header_preservation(self, sample_csv_file):
+        """Test that column names are preserved (not normalized to snake_case)."""
         tool = IngestPartnerFileTool()
         result = tool(sample_csv_file)
 
         df = result.data['dataframe']
-        # Verify column names are normalized
-        assert 'first_name' in df.columns, "Spaces should be replaced with underscores"
-        assert 'last_name' in df.columns, "Spaces should be replaced with underscores"
-        assert 'date_of_birth' in df.columns, "Parentheses should be removed"
-        assert 'zip_code' in df.columns, "Spaces should be replaced with underscores"
-
-        # Verify all columns are lowercase
-        for col in df.columns:
-            assert col.islower() or '_' in col, f"Column '{col}' should be lowercase"
+        # Verify original headers exist
+        assert 'First Name' in df.columns
+        assert 'Last Name' in df.columns
+        assert 'Date of Birth (MM/DD/YYYY)' in df.columns
+        assert 'Zip Code' in df.columns
 
     def test_file_hash_calculation(self, sample_csv_file):
         """Test file hash calculation for idempotency."""
@@ -73,7 +71,7 @@ class TestIngestPartnerFileTool:
         df = result.data['dataframe']
 
         # Verify zip codes are strings, not floats
-        zip_values = df['zip_code'].tolist()
+        zip_values = df['Zip Code'].tolist()
         for zip_val in zip_values:
             assert isinstance(zip_val, str) or pd.isna(zip_val), f"Zip code '{zip_val}' should be string, got {type(zip_val)}"
             if isinstance(zip_val, str):
@@ -116,4 +114,3 @@ class TestIngestPartnerFileTool:
         finally:
             if temp_path.exists():
                 temp_path.unlink()
-

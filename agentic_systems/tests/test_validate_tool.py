@@ -1,6 +1,8 @@
-"""Unit tests for ValidateStagedDataTool per PRD-TRD Section 10.1."""
+"""Unit tests for ValidateStagedDataTool per updated spreadsheet specifications."""
 
 import pandas as pd
+import pytest
+from datetime import datetime, timedelta
 
 from agentic_systems.core.tools import ToolResult
 from agentic_systems.core.validation.validate_tool import ValidateStagedDataTool
@@ -15,148 +17,136 @@ class TestValidateStagedDataTool:
 
         assert hasattr(tool, 'name'), "Tool must have 'name' attribute"
         assert tool.name == "ValidateStagedDataTool"
-        assert hasattr(tool, 'REQUIRED_FIELDS'), "Tool must have REQUIRED_FIELDS"
         assert callable(tool), "Tool must be callable"
 
-    def test_required_field_validation(self, sample_dataframe_with_errors):
-        """Test required field validation (first_name, last_name, date_of_birth)."""
+    def test_header_validation_a_ap(self):
+        """Test file-level header validation for A–AP slice."""
         tool = ValidateStagedDataTool()
-        result = tool(sample_dataframe_with_errors)
-
-        assert isinstance(result, ToolResult), "Must return ToolResult"
-        assert 'violations' in result.data, "Result must contain violations list"
-        assert not result.ok, "Errors should mark result as not ok"
-
+        
+        # Less than 42 columns
+        df_small = pd.DataFrame(columns=['First Name', 'Last Name'])
+        result = tool(df_small)
         violations = result.data['violations']
-        assert isinstance(violations, list), "Violations should be a list"
-
-        # Check for required field errors
-        required_field_errors = [
-            v for v in violations
-            if v['field'] in tool.REQUIRED_FIELDS and v['severity'] == 'Error'
-        ]
-        assert len(required_field_errors) > 0, "Should detect missing required fields"
-
-    def test_row_level_reporting(self, sample_dataframe_with_errors):
-        """Test row-level validation reporting (redacted per BRD Section 2.3)."""
-        tool = ValidateStagedDataTool()
-        result = tool(sample_dataframe_with_errors)
-
+        assert any("fewer than 42 columns" in v['message'].lower() for v in violations)
+        
+        # Required headers missing in A–AP
+        headers = [f"Col {i}" for i in range(42)]
+        df_missing = pd.DataFrame(columns=headers)
+        result = tool(df_missing)
         violations = result.data['violations']
+        assert any("Required header \"First Name\" must exist" in v['message'] for v in violations)
+        
+        # Duplicate headers in A–AP
+        headers_dup = ["First Name"] * 42 # Pandas will rename these to First Name.1, etc.
+        df_dup = pd.DataFrame(columns=headers_dup)
+        result = tool(df_dup)
+        dup_errors = [v for v in result.data['violations'] if "duplicate" in v['message'].lower()]
+        assert len(dup_errors) > 0
 
-        # Verify row-level entries have correct structure
-        for violation in violations:
-            assert 'row_index' in violation, "Violation must have row_index"
-            assert isinstance(violation['row_index'], int), "row_index must be an int"
-            assert 'field' in violation, "Violation must have field"
-            assert 'severity' in violation, "Violation must have severity"
-            assert 'message' in violation, "Violation must have message"
-
-            # Verify no raw field values (redacted per BRD Section 2.3)
-            assert 'value' not in violation, "Violation should not contain raw field values"
-            assert violation['severity'] in ['Error', 'Warning'], "Severity must be Error or Warning"
-
-    def test_active_past_graduation_check(self):
-        """Test active past graduation date validation rule."""
-        # Create DataFrame with active participant past graduation
-        past_date = "01/01/2000"
-        df = pd.DataFrame({
-            'first_name': ['John'],
-            'last_name': ['Doe'],
-            'date_of_birth': ['01/15/1990'],
-            'current_program_status': ['Currently active in program'],
-            'training_exit_date____': [past_date]
-        })
-
+    def test_row_level_termination(self):
+        """Test that validation stops at the first row where A–AP are all blank."""
         tool = ValidateStagedDataTool()
+        # Create 42 columns
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1", "City", "State", "Zip Code", "Training Start Date \n(MM/DD/YYYY)"]
+        headers += [f"Extra {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["John", "Doe", "01/01/1990", "123 Main St", "Seattle", "WA", "98101", "01/01/2023"] + [""] * 34,
+            [""] * 42, # Termination row
+            ["Jane", "Smith", "01/01/1990", "456 Oak St", "Seattle", "WA", "98101", "01/01/2023"] + [""] * 34
+        ], columns=headers)
+        
         result = tool(df)
-
         violations = result.data['violations']
+        
+        # Only row 2 (John Doe) should be processed. Row 4 (Jane Smith) should be ignored.
+        row_nums = [v['row_index'] for v in violations]
+        assert all(rn < 4 for rn in row_nums)
 
-        # Should detect active past graduation error
-        active_past_errors = [
-            v for v in violations
-            if 'active past graduation' in v['message'].lower()
+    def test_robust_mapping(self):
+        """Test mapping with newlines, smart quotes, and extra whitespace."""
+        tool = ValidateStagedDataTool()
+        headers = [
+            "First\nName", 
+            "Date of Birth\n(MM/DD/YYYY)", 
+            "Address 1", 
+            "Last Name",
+            "City", "State", "Zip Code", "Training Start Date"
         ]
-        assert len(active_past_errors) > 0, "Should detect active past graduation date"
-        assert not result.ok, "Errors should mark result as not ok"
-
-    def test_zip_code_validation_integration(self, sample_dataframe):
-        """Test zip code validation integration with full validation flow."""
-        # Add invalid zip codes to test data
-        df = sample_dataframe.copy()
-        df.loc[0, 'zip_code'] = '98101.0'  # Float-like string
-        df.loc[1, 'zip_code'] = 'invalid'  # Invalid format
-        df.loc[2, 'zip_code'] = '60601'  # Valid but wrong state
-
-        tool = ValidateStagedDataTool()
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["John", "01/01/1990", "123 Main St", "", "Seattle", "WA", "98101", "01/01/2023"] + [""] * 34
+        ], columns=headers)
+        
         result = tool(df)
-
         violations = result.data['violations']
-        zip_violations = [v for v in violations if v['field'] == 'zip_code']
+        # Should detect missing Last Name using mapping
+        assert any("Last Name is required" in v['message'] for v in violations)
 
-        # Should detect zip code format errors
-        zip_errors = [v for v in zip_violations if v['severity'] == 'Error']
-        assert len(zip_errors) >= 2, "Should detect invalid zip code formats"
-
-        # Should detect state/zip consistency warnings
-        zip_warnings = [v for v in zip_violations if v['severity'] == 'Warning']
-        assert len(zip_warnings) >= 1, "Should detect zip/state consistency issues"
-        assert not result.ok, "Errors should mark result as not ok"
-
-        # Messages should not echo raw zip values
-        raw_values = {'98101.0', 'invalid', '60601'}
-        for violation in zip_violations:
-            for raw_value in raw_values:
-                assert raw_value not in violation['message'], "Zip messages should not echo raw values"
-
-    def test_empty_field_warnings(self, sample_dataframe):
-        """Test empty field detection (warnings for optional fields)."""
-        # Add empty optional fields
-        df = sample_dataframe.copy()
-        df['middle_name'] = ['', 'Jane', '']
-        df['address_2'] = ['', '', '']
-
+    def test_address_validation_strict(self):
+        """Test Address 1 restrictions matching the new spec."""
         tool = ValidateStagedDataTool()
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1", "City", "State", "Zip Code", "Training Start Date \n(MM/DD/YYYY)"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["A", "A", "01/01/1990", "PO Box 123", "C", "S", "Z", "01/01/2023"] + [""] * 34,
+            ["B", "B", "01/01/1990", "123 Main St Apt 4", "C", "S", "Z", "01/01/2023"] + [""] * 34,
+            ["C", "C", "01/01/1990", "123 Main St Apt. 4", "C", "S", "Z", "01/01/2023"] + [""] * 34,  # With period
+            ["D", "D", "01/01/1990", "123 Main St Suite 100", "C", "S", "Z", "01/01/2023"] + [""] * 34,
+            ["E", "E", "01/01/1990", "123 Main St #12", "C", "S", "Z", "01/01/2023"] + [""] * 34,
+            ["F", "F", "01/01/1990", "51684 Brianna Flats", "C", "S", "Z", "01/01/2023"] + [""] * 34  # Holistic check
+        ], columns=headers)
+        
         result = tool(df)
+        messages = [v['message'] for v in result.data['violations']]
+        
+        assert any("must not contain a PO Box" in m for m in messages)
+        assert any("Apartment/Suite/Unit info must be in Address 2" in m for m in messages)
+        # Should catch: Apt 4, Apt. 4, Suite 100, #12, and Flats (via holistic check) = 5 violations
+        assert messages.count("Apartment/Suite/Unit info must be in Address 2 (not Address 1).") >= 5
 
-        violations = result.data['violations']
-
-        # Should generate warnings for empty optional fields
-        empty_warnings = [
-            v for v in violations
-            if v['severity'] == 'Warning' and 'empty' in v['message'].lower()
-        ]
-        assert len(empty_warnings) > 0, "Should detect empty optional fields"
-        assert result.ok, "Warnings should not mark result as failed"
-
-    def test_validation_summary_counts(self, sample_dataframe_with_errors):
-        """Test validation summary counts (error_count, warning_count)."""
+    def test_employment_reverse_check(self):
+        """Test that employment details require an employed status."""
         tool = ValidateStagedDataTool()
-        result = tool(sample_dataframe_with_errors)
-
-        assert 'error_count' in result.data, "Result must contain error_count"
-        assert 'warning_count' in result.data, "Result must contain warning_count"
-        assert 'total_violations' in result.data, "Result must contain total_violations"
-
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1", "City", "State", "Zip Code", "Training Start Date \n(MM/DD/YYYY)", 
+                   "Employment Status", "If Employed, Employer Name"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["A", "A", "01/01/1990", "1", "C", "S", "Z", "01/01/2023", "Still seeking employment in-field", "Some Employer"] + [""] * 32
+        ], columns=headers)
+        
+        result = tool(df)
         violations = result.data['violations']
-        errors = [v for v in violations if v['severity'] == 'Error']
-        warnings = [v for v in violations if v['severity'] == 'Warning']
+        assert any("Employment Status must be one of the two “Employed In-field…” options" in v['message'] for v in violations)
 
-        assert result.data['error_count'] == len(errors), "Error count should match violations"
-        assert result.data['warning_count'] == len(warnings), "Warning count should match violations"
-        assert result.data['total_violations'] == len(violations), "Total violations should match list length"
-        assert not result.ok, "Errors should mark result as not ok"
-
-    def test_no_errors_on_valid_data(self, sample_dataframe):
-        """Test that valid data produces no errors."""
+    def test_date_validations_no_double_reporting(self):
+        """Test that invalid dates don't also report 'required' errors if value is present."""
         tool = ValidateStagedDataTool()
-        result = tool(sample_dataframe)
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1", "City", "State", "Zip Code", "Training Start Date \n(MM/DD/YYYY)"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["A", "A", "invalid-date", "1", "C", "S", "Z", "01/01/2023"] + [""] * 34
+        ], columns=headers)
+        
+        result = tool(df)
+        dob_errors = [v for v in result.data['violations'] if "Date of Birth" in v['field']]
+        # Should only have "must be a valid date", not "is required"
+        assert len(dob_errors) == 1
+        assert "must be a valid date" in dob_errors[0]['message']
 
-        violations = result.data['violations']
-        errors = [v for v in violations if v['severity'] == 'Error']
-
-        # Should have no errors for valid required fields
-        assert len(errors) == 0, "Valid data should have no errors"
-        assert result.ok, "Valid data should mark result as ok"
-
+    def test_valid_case(self):
+        """Test a fully valid case."""
+        tool = ValidateStagedDataTool()
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1", "City", "State", "Zip Code", "Training Start Date \n(MM/DD/YYYY)", "Current Program Status", "Employment Status"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["John", "Doe", "01/01/1990", "123 Main St", "Seattle", "WA", "98101", "01/01/2023", "Currently active", "Still seeking employment in-field"] + [""] * 32
+        ], columns=headers)
+        
+        result = tool(df)
+        assert result.ok, f"Validation should be OK but got: {result.summary}. Violations: {result.data['violations']}"
