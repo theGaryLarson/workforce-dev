@@ -203,6 +203,8 @@ Partner File (CSV/Excel)
 Canonical Data (DataFrame/JSON) + Summary
 ```
 
+
+
 ## Implementation Plan
 
 ### File Structure
@@ -251,28 +253,31 @@ Create the following files:
 - Keep run_id pattern `<partner>-<quarter>-<platform>` per [PRD-TRD Section 11.2](../../agentic_systems/docs/prd-trd.md#112-configuration-management)
 - **Agent routing (direct instantiation per [PRD-TRD Section 6.4](../../agentic_systems/docs/prd-trd.md#64-platform-adapter-specifications)):**
   ```python
-    # CLI directly instantiates platform-specific agents per PRD-TRD Section 6.4
-    # No dispatcher needed - CLI routes directly to platform implementations
-    if args.platform == "minimal":
-        from agentic_systems.agents.simple_intake_agent import SimpleIntakeAgent
-        agent = SimpleIntakeAgent()  # Part 1: Deterministic baseline
-    elif args.platform == "langchain":
-        from agentic_systems.agents.platforms.langchain.intake_impl import LangChainIntakeAgent
-        agent = LangChainIntakeAgent()  # Part 2: LLM orchestration
-    else:
-        raise ValueError(f"Unknown platform: {args.platform}")
-    
-    # Demonstrate BaseAgent contract per PRD-TRD Section 5.1
-    plan = agent.plan({"file_path": args.file, "run_id": run_id})
-    print("=== PLAN ===")
-    print(plan)  # Per BRD FR-011, plan shown before execution
-    
-    results = agent.execute({"file_path": args.file, "run_id": run_id})
-    
-    summary = agent.summarize(results)
-    print("\n=== SUMMARY ===")
-    print(summary)  # Per BRD FR-011, summary shown after execution
+        # CLI directly instantiates platform-specific agents per PRD-TRD Section 6.4
+        # No dispatcher needed - CLI routes directly to platform implementations
+        if args.platform == "minimal":
+            from agentic_systems.agents.simple_intake_agent import SimpleIntakeAgent
+            agent = SimpleIntakeAgent()  # Part 1: Deterministic baseline
+        elif args.platform == "langchain":
+            from agentic_systems.agents.platforms.langchain.intake_impl import LangChainIntakeAgent
+            agent = LangChainIntakeAgent()  # Part 2: LLM orchestration
+        else:
+            raise ValueError(f"Unknown platform: {args.platform}")
+        
+        # Demonstrate BaseAgent contract per PRD-TRD Section 5.1
+        plan = agent.plan({"file_path": args.file, "run_id": run_id})
+        print("=== PLAN ===")
+        print(plan)  # Per BRD FR-011, plan shown before execution
+        
+        results = agent.execute({"file_path": args.file, "run_id": run_id})
+        
+        summary = agent.summarize(results)
+        print("\n=== SUMMARY ===")
+        print(summary)  # Per BRD FR-011, summary shown after execution
   ```
+
+
+
 
 - Pass file path into agent inputs
 - Print plan before execution and summary after execution (demonstrates BaseAgent contract)
@@ -386,6 +391,8 @@ class IngestPartnerFileTool:
         )
 ```
 
+
+
 ### ValidateStagedDataTool Features
 
 - Required column validation per [BRD FR-002](../../agentic_systems/docs/brd.md#32-data-validation-fr-002)
@@ -428,6 +435,8 @@ Per [PRD-TRD Section 11.2](../../agentic_systems/docs/prd-trd.md#112-configurati
 DATABASE_URL=postgresql://user:password@host:port/database
 ```
 
+
+
 #### SharePoint Integration (Optional - Week 3+)
 
 Per [BRD FR-001](../../agentic_systems/docs/brd.md#31-data-ingestion-fr-001) (partner file reading) and [BRD FR-013](../../agentic_systems/docs/brd.md#33-secure-partner-sharing-fr-013) (validation report sharing):
@@ -445,6 +454,8 @@ SHAREPOINT_PARTNER_FILES_FOLDER=/sites/CFA/Shared Documents/Partner Files
 SHAREPOINT_REPORTS_FOLDER=/sites/CFA/Shared Documents/Validation Reports
 ```
 
+
+
 #### External API Integration (Optional - Week 3+)
 
 Per [BRD FR-002](../../agentic_systems/docs/brd.md#32-data-validation-fr-002) (prevailing wage validation):
@@ -454,6 +465,8 @@ Per [BRD FR-002](../../agentic_systems/docs/brd.md#32-data-validation-fr-002) (p
 WAGE_API_URL=https://api.example.com/wage-validation
 WAGE_API_KEY=<API key for wage validation service>
 ```
+
+
 
 #### LLM Platform Integration (Optional - Part 2)
 
@@ -471,6 +484,8 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_API_KEY=<Azure OpenAI API key>
 AZURE_OPENAI_DEPLOYMENT_NAME=<deployment name>
 ```
+
+
 
 ### Environment Variable Setup Instructions
 
@@ -566,22 +581,25 @@ Create `agentic_systems/core/audit/write_evidence.py` as a deterministic core to
 - Each tool call emits `STEP_START` and `STEP_END` events with sanitized metadata only (counts, hashes, status) - no DataFrames or raw data
 - **Example trace event:**
     ```python
-                                                                                                                # BaseAgent._emit() writes to tool_calls.jsonl per PRD-TRD Section 7.4
-                                                                                                                event = {
-                                                                                                                    "timestamp": "2025-01-15T10:30:00Z",
-                                                                                                                    "event_type": "STEP_END",
-                                                                                                                    "run_id": run_id,
-                                                                                                                    "message": "Completed IngestPartnerFileTool",
-                                                                                                                    "data": {
-                                                                                                                        "tool": "IngestPartnerFileTool",
-                                                                                                                        "ok": True,
-                                                                                                                        "row_count": 500,  # Metadata only - no DataFrame
-                                                                                                                        "file_hash": "abc123...",  # Hash for idempotency per PRD-TRD Section 5.4
-                                                                                                                        "columns": ["first_name", "last_name", ...]  # Column names only - no raw data
-                                                                                                                    }
-                                                                                                                }
-                                                                                                                # Append to tool_calls.jsonl per BRD FR-011
+                                                                                                                        # BaseAgent._emit() writes to tool_calls.jsonl per PRD-TRD Section 7.4
+                                                                                                                        event = {
+                                                                                                                            "timestamp": "2025-01-15T10:30:00Z",
+                                                                                                                            "event_type": "STEP_END",
+                                                                                                                            "run_id": run_id,
+                                                                                                                            "message": "Completed IngestPartnerFileTool",
+                                                                                                                            "data": {
+                                                                                                                                "tool": "IngestPartnerFileTool",
+                                                                                                                                "ok": True,
+                                                                                                                                "row_count": 500,  # Metadata only - no DataFrame
+                                                                                                                                "file_hash": "abc123...",  # Hash for idempotency per PRD-TRD Section 5.4
+                                                                                                                                "columns": ["first_name", "last_name", ...]  # Column names only - no raw data
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                        # Append to tool_calls.jsonl per BRD FR-011
     ```
+
+
+
 
 - **`outputs/`**: Generated artifacts per [BRD FR-011](../../agentic_systems/docs/brd.md#312-evidence-bundle-generation-fr-011):
 - `outputs/validation_report.csv` (row-level validation entries: row_index, field, severity, message only - no raw values)
@@ -609,6 +627,8 @@ def write_manifest(run_id: str, agent_name: str, platform: str) -> None:
     with open(f"core/audit/runs/{run_id}/manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)
 ```
+
+
 
 ## Testing Strategy
 
@@ -685,6 +705,8 @@ Installation:
 ```bash
 pip install pandas openpyxl
 ```
+
+
 
 ## Data Classification
 
@@ -797,22 +819,25 @@ This must be declared in `manifest.json` per [BRD FR-011](../../agentic_systems/
 - [ ] `execute()`: call tools in order, stop on blockers
 - **Wrap each tool call with evidence logging** per [PRD-TRD Section 7.4](../../agentic_systems/docs/prd-trd.md#74-evidence-bundle-generation-flow):
     ```python
-                                                                                                                # BaseAgent.execute() wraps tool calls per PRD-TRD Section 7.4
-                                                                                                                def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-                                                                                                                    for step in self.plan(inputs):
-                                                                                                                        # Emit STEP_START event to tool_calls.jsonl per BRD FR-011
-                                                                                                                        self._emit(state, "STEP_START", f"Executing {step['tool']}", 
-                                                                                                                                  {"tool": step['tool'], "args": step['args']})
-                                                                                                                        
-                                                                                                                        # Invoke tool - returns ToolResult with in-memory data for chaining
-                                                                                                                        result = self.tools[step['tool']](**step['args'])  # Per PRD-TRD Section 5.4
-                                                                                                                        
-                                                                                                                        # Emit STEP_END with sanitized metadata only (no DataFrames) per PRD-TRD Section 3.2
-                                                                                                                        self._emit(state, "STEP_END", f"Completed {step['tool']}", 
-                                                                                                                                  {"tool": step['tool'], "ok": result.ok, 
-                                                                                                                                   "summary": result.summary, "row_count": len(result.data.get('dataframe', [])),
-                                                                                                                                   "file_hash": result.data.get('file_hash')})  # Metadata only
+                                                                                                                        # BaseAgent.execute() wraps tool calls per PRD-TRD Section 7.4
+                                                                                                                        def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+                                                                                                                            for step in self.plan(inputs):
+                                                                                                                                # Emit STEP_START event to tool_calls.jsonl per BRD FR-011
+                                                                                                                                self._emit(state, "STEP_START", f"Executing {step['tool']}", 
+                                                                                                                                          {"tool": step['tool'], "args": step['args']})
+                                                                                                                                
+                                                                                                                                # Invoke tool - returns ToolResult with in-memory data for chaining
+                                                                                                                                result = self.tools[step['tool']](**step['args'])  # Per PRD-TRD Section 5.4
+                                                                                                                                
+                                                                                                                                # Emit STEP_END with sanitized metadata only (no DataFrames) per PRD-TRD Section 3.2
+                                                                                                                                self._emit(state, "STEP_END", f"Completed {step['tool']}", 
+                                                                                                                                          {"tool": step['tool'], "ok": result.ok, 
+                                                                                                                                           "summary": result.summary, "row_count": len(result.data.get('dataframe', [])),
+                                                                                                                                           "file_hash": result.data.get('file_hash')})  # Metadata only
     ```
+
+
+
 
                                                                                                                                                                                                                                                                 - Emit `STEP_START` event to `tool_calls.jsonl` before tool invocation
                                                                                                                                                                                                                                                                 - Invoke tool: `result = tool(**kwargs)` (returns ToolResult with in-memory data for chaining)
@@ -952,14 +977,17 @@ The complete three-part POC is successful when:
 ### Part 3 Files (Additional)
 
 - `agentic_systems/core/partner_communication/__init__.py` (new)
+- `agentic_systems/core/partner_communication/collect_wsac_aggregates_tool.py` (new)
 - `agentic_systems/core/partner_communication/generate_error_report_tool.py` (new)
 - `agentic_systems/core/partner_communication/generate_email_tool.py` (new)
 - `agentic_systems/core/partner_communication/secure_link_tool.py` (new)
 - `agentic_systems/core/partner_communication/request_approval_tool.py` (new)
+- `agentic_systems/core/partner_communication/upload_sharepoint_tool.py` (new or update)
 - `agentic_systems/tests/test_generate_error_report_tool.py` (new)
 - `agentic_systems/tests/test_generate_email_tool.py` (new)
 - `agentic_systems/tests/test_secure_link_tool.py` (new)
 - `agentic_systems/tests/test_request_approval_tool.py` (new)
+- `agentic_systems/tests/test_upload_sharepoint_tool.py` (new)
 
 ## Part 1 Notes for Instructors
 
@@ -1135,6 +1163,8 @@ pip install langchain langchain-openai openai
 pip install langchain langchain-anthropic anthropic
 ```
 
+
+
 ## Part 2 Environment Variables
 
 Part 2 requires LLM API keys (not needed for Part 1):
@@ -1160,6 +1190,8 @@ python -m agentic_systems.cli.main run intake --file agentic_systems/data/masked
 python -m agentic_systems.cli.main run intake --file agentic_systems/data/masked/Example\ Quarterly\ Data\ Report.mock.csv --partner demo --quarter Q1 --platform langchain
 ```
 
+
+
 ### Expected Differences
 
 **Part 1 Output:**
@@ -1179,16 +1211,19 @@ python -m agentic_systems.cli.main run intake --file agentic_systems/data/masked
 - [ ] Create `agentic_systems/agents/platforms/langchain/adapter.py` per [PRD-TRD Section 6.4](../../agentic_systems/docs/prd-trd.md#64-platform-adapter-specifications)
 - [ ] Implement `_baseagent_tool_to_langchain()` to wrap Part 1 tools
   ```python
-                                                        # Tool adapter per PRD-TRD Section 6.4
-                                                        def _baseagent_tool_to_langchain(self, name: str, tool_impl: Tool):
-                                                            @tool(name=name, description=f"Tool: {name}")
-                                                            def langchain_wrapper(**kwargs) -> str:
-                                                                # Calls Part 1 deterministic tool - same tools, no changes needed
-                                                                result = tool_impl(**kwargs)  # Per PRD-TRD Section 5.4 Tool protocol
-                                                                # LLM receives summary only (metadata) - no raw data per BRD Section 2.3
-                                                                return result.summary if result.ok else f"Error: {result.summary}"
-                                                            return langchain_wrapper
+                                                            # Tool adapter per PRD-TRD Section 6.4
+                                                            def _baseagent_tool_to_langchain(self, name: str, tool_impl: Tool):
+                                                                @tool(name=name, description=f"Tool: {name}")
+                                                                def langchain_wrapper(**kwargs) -> str:
+                                                                    # Calls Part 1 deterministic tool - same tools, no changes needed
+                                                                    result = tool_impl(**kwargs)  # Per PRD-TRD Section 5.4 Tool protocol
+                                                                    # LLM receives summary only (metadata) - no raw data per BRD Section 2.3
+                                                                    return result.summary if result.ok else f"Error: {result.summary}"
+                                                                return langchain_wrapper
   ```
+
+
+
 
 - [ ] Implement state conversion methods (BaseAgent ↔ LangChain) per [PRD-TRD Section 6.4](../../agentic_systems/docs/prd-trd.md#64-platform-adapter-specifications)
 
@@ -1213,28 +1248,31 @@ python -m agentic_systems.cli.main run intake --file agentic_systems/data/masked
 - [ ] Update `cli/main.py` to support `--platform langchain` option per [PRD-TRD Section 11.2](../../agentic_systems/docs/prd-trd.md#112-configuration-management)
 - [ ] **Direct instantiation routing** (per [PRD-TRD Section 6.4](../../agentic_systems/docs/prd-trd.md#64-platform-adapter-specifications)):
   ```python
-                                                        # CLI directly instantiates platform-specific agents per PRD-TRD Section 6.4
-                                                        # No dispatcher needed - CLI routes directly to platform implementations
-                                                        if args.platform == "minimal":
-                                                            from agentic_systems.agents.simple_intake_agent import SimpleIntakeAgent
-                                                            agent = SimpleIntakeAgent()  # Part 1: Deterministic baseline
-                                                        elif args.platform == "langchain":
-                                                            from agentic_systems.agents.platforms.langchain.intake_impl import LangChainIntakeAgent
-                                                            agent = LangChainIntakeAgent()  # Part 2: LLM orchestration
-                                                        else:
-                                                            raise ValueError(f"Unknown platform: {args.platform}")
-                                                        
-                                                        # Demonstrate BaseAgent contract per PRD-TRD Section 5.1
-                                                        plan = agent.plan({"file_path": args.file, "run_id": run_id})
-                                                        print("=== PLAN ===")
-                                                        print(plan)  # Per BRD FR-011, plan shown before execution
-                                                        
-                                                        results = agent.execute({"file_path": args.file, "run_id": run_id})
-                                                        
-                                                        summary = agent.summarize(results)
-                                                        print("\n=== SUMMARY ===")
-                                                        print(summary)  # Per BRD FR-011, summary shown after execution
+                                                            # CLI directly instantiates platform-specific agents per PRD-TRD Section 6.4
+                                                            # No dispatcher needed - CLI routes directly to platform implementations
+                                                            if args.platform == "minimal":
+                                                                from agentic_systems.agents.simple_intake_agent import SimpleIntakeAgent
+                                                                agent = SimpleIntakeAgent()  # Part 1: Deterministic baseline
+                                                            elif args.platform == "langchain":
+                                                                from agentic_systems.agents.platforms.langchain.intake_impl import LangChainIntakeAgent
+                                                                agent = LangChainIntakeAgent()  # Part 2: LLM orchestration
+                                                            else:
+                                                                raise ValueError(f"Unknown platform: {args.platform}")
+                                                            
+                                                            # Demonstrate BaseAgent contract per PRD-TRD Section 5.1
+                                                            plan = agent.plan({"file_path": args.file, "run_id": run_id})
+                                                            print("=== PLAN ===")
+                                                            print(plan)  # Per BRD FR-011, plan shown before execution
+                                                            
+                                                            results = agent.execute({"file_path": args.file, "run_id": run_id})
+                                                            
+                                                            summary = agent.summarize(results)
+                                                            print("\n=== SUMMARY ===")
+                                                            print(summary)  # Per BRD FR-011, summary shown after execution
   ```
+
+
+
 
 - [ ] Route to `LangChainIntakeAgent` when platform is "langchain"
 - [ ] Route to `SimpleIntakeAgent` when platform is "minimal" (Part 1)
@@ -1332,6 +1370,8 @@ flowchart TD
     T -->|Yes| D
     T -->|No| E
 ```
+
+
 
 ## Part 3 Implementation Plan
 
@@ -1440,17 +1480,32 @@ flowchart TD
                                                                                                                                                                                                                                                                                                                                                                                                 - `outputs/staff_approval_record.json` (approval decision and timestamp)
                                                                                                                                                                                                                                                                                                                                                                                                 - `secure_link_code.txt` (access code for demo - only if approved)
 
-24. **`agentic_systems/cli/main.py`** (update)
+24. **`agentic_systems/core/partner_communication/upload_sharepoint_tool.py`** (new or update)
+
+                                                                                                                                                                                                                                                                - `UploadSharePointTool` class per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012) and [BRD FR-013](../../agentic_systems/docs/brd.md#33-secure-partner-sharing-fr-013)
+                                                                                                                                                                                                                                                                - Supports three `folder_type` values in demo mode:
+                                                                                                                                                                                                                                                                                                                                                                                                - `"internal"` → copies files into `sharepoint_simulation/internal/<run-id>/` for staff review worksheet (FR-012)
+                                                                                                                                                                                                                                                                                                                                                                                                - `"partner"` or `"partner_accessible"` → copies files into `sharepoint_simulation/partner_accessible/<run-id>/` for partner-facing error report (FR-013)
+                                                                                                                                                                                                                                                                                                                                                                                                - `"upload"` → copies files into `sharepoint_simulation/uploads/<run-id>/` as simulated partner upload/drop-off location for corrected files (BRD FR-012 validation retry & resume)
+                                                                                                                                                                                                                                                                - Returns `file://` URL for demo mode
+                                                                                                                                                                                                                                                                - **Explicit comments** distinguish demo-only behavior (local filesystem) vs. production SharePoint client expectations
+                                                                                                                                                                                                                                                                - Inline comments reference **BRD FR-012/FR-013** and **PRD-TRD SharePoint tools section**
+                                                                                                                                                                                                                                                                - Returns file path/URL in ToolResult.data per [PRD-TRD Section 5.4](../../agentic_systems/docs/prd-trd.md#54-tool-specifications)
+
+25. **`agentic_systems/cli/main.py`** (update)
 
                                                                                                                                                                                                                                                                 - Add `--resume <run-id>` argument per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012) and [PRD-TRD Section 11.2](../../agentic_systems/docs/prd-trd.md#112-configuration-management)
                                                                                                                                                                                                                                                                 - When resume flag is set:
                                                                                                                                                                                                                                                                                                                                                                                                 - Load agent from evidence bundle manifest
                                                                                                                                                                                                                                                                                                                                                                                                 - Call `agent.resume()` with corrected file path
                                                                                                                                                                                                                                                                                                                                                                                                 - Continue evidence bundle generation per [BRD FR-011](../../agentic_systems/docs/brd.md#312-evidence-bundle-generation-fr-011)
-                                                                                                                                                                                                                                                                - Add file watch option (optional) per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012):
-                                                                                                                                                                                                                                                                                                                                                                                                - `--watch <directory>` to monitor for corrected files
-                                                                                                                                                                                                                                                                                                                                                                                                - Poll directory for files matching pattern (e.g., `*_corrected.csv`)
-                                                                                                                                                                                                                                                                                                                                                                                                - Auto-resume when corrected file detected
+                                                                                                                                                                                                                                                                - Add `--watch <run-id>` option per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012):
+                                                                                                                                                                                                                                                                                                                                                                                                - Resolves `<run-id>` → evidence directory
+                                                                                                                                                                                                                                                                                                                                                                                                - Polls `sharepoint_simulation/uploads/<run-id>/` folder at configurable interval (e.g., every 5 seconds)
+                                                                                                                                                                                                                                                                                                                                                                                                - Detects new corrected files (any non-empty file created after `resume_state.timestamp` OR filename pattern like `<partner>_<quarter>_corrected.*`)
+                                                                                                                                                                                                                                                                                                                                                                                                - When new file detected, invokes same internal path as `--resume` with that file
+                                                                                                                                                                                                                                                                                                                                                                                                - **Clearly comment** that in production this would be replaced by SharePoint webhook handler calling the same resume entry point (per PRD-TRD 4.1 and 4.4)
+                                                                                                                                                                                                                                                                                                                                                                                                - Ensure polling logic is clearly marked as **demo-only** and does not violate PRD-TRD's production story (webhook-based)
 
 ## Part 3 Key Implementation Details
 
@@ -1644,6 +1699,8 @@ python -m agentic_systems.cli.main watch --directory agentic_systems/data/correc
 python -m agentic_systems.cli.main run intake --resume demo-Q1-minimal --file agentic_systems/data/corrected/Example_Quarterly_Data_Report_corrected.csv
 ```
 
+
+
 ## Part 3 Evidence Bundle Updates
 
 Per [BRD FR-011](../../agentic_systems/docs/brd.md#312-evidence-bundle-generation-fr-011) and [PRD-TRD Section 3.2](../../agentic_systems/docs/prd-trd.md#32-evidence-bundle-structure):**New Files in Evidence Bundle**:
@@ -1674,6 +1731,8 @@ Per [BRD FR-011](../../agentic_systems/docs/brd.md#312-evidence-bundle-generatio
   "resume_available": true
 }
 ```
+
+
 
 ## Part 3 Testing Strategy
 
@@ -1834,7 +1893,3 @@ Per [PRD-TRD Section 11.2](../../agentic_systems/docs/prd-trd.md#112-configurati
 
 - **Row-level entries**: `{row_index, field, severity, message}` only - no raw field values per [BRD Section 2.3](../../agentic_systems/docs/brd.md#23-business-rules) PII handling
 - Maintains "redacted" classification
-
-### LLM Data Restrictions
-
-- **LLM receives metadata only**: file name, size, counts, column names, error types - no raw data per [BRD Section 2.3](../../agentic_systems/docs/brd.md#23-business-rules)
