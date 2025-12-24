@@ -1678,26 +1678,71 @@ Per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safegua
 
 6. Update evidence bundle with resume metadata
 
-### File Watch Mechanism (Optional)
+### SharePoint Upload Simulation and File Watch Mechanism
 
-Per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012) (validation retry and resume):**Implementation**:
+Per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012) (validation retry and resume) and the [simulate-sharepoint-upload-and-resume plan](../../.cursor/plans/simulate-sharepoint-upload-and-resume_e76caab1.plan.md):
 
-- Poll directory for files matching pattern: `*_corrected.csv` or `*_fixed.csv`
-- Compare file hash with original to detect changes per [PRD-TRD Section 5.4](../../agentic_systems/docs/prd-trd.md#54-tool-specifications)
-- When corrected file detected:
-                                                                                                                                - Extract run_id from filename or directory structure
-                                                                                                                                - Call `agent.resume(corrected_file_path)` per [BRD FR-012](../../agentic_systems/docs/brd.md#313-human-in-the-loop-safeguards-fr-012)
-                                                                                                                                - Log resume event to evidence bundle per [BRD FR-011](../../agentic_systems/docs/brd.md#312-evidence-bundle-generation-fr-011)
+**Simulated SharePoint Folder Structure:**
 
-**CLI Command**:
+The simulation layout extends under the evidence bundle (no behavior change to real SharePoint semantics):
+
+- `sharepoint_simulation/internal/<run-id>/` - Staff review worksheet (FR-012)
+- `sharepoint_simulation/partner_accessible/<run-id>/` - Partner-facing error report (FR-013)
+- `sharepoint_simulation/uploads/<run-id>/` - Simulated partner upload/drop-off location for corrected files (BRD FR-012 validation retry & resume)
+
+```mermaid
+flowchart TD
+    runDir[runIdEvidenceDir]
+    internal[sharepoint_simulation/internal/<run-id>/]
+    partner[sharepoint_simulation/partner_accessible/<run-id>/]
+    uploads[sharepoint_simulation/uploads/<run-id>/]
+
+    runDir --> internal
+    runDir --> partner
+    runDir --> uploads
+```
+
+**UploadSharePointTool Implementation:**
+
+- Supports three `folder_type` values:
+  - `"internal"` → copies files into `sharepoint_simulation/internal/<run-id>/`
+  - `"partner"` or `"partner_accessible"` → copies files into `sharepoint_simulation/partner_accessible/<run-id>/`
+  - `"upload"` → copies files into `sharepoint_simulation/uploads/<run-id>/` and returns `file://` URL
+- Tool's docstring clearly distinguishes demo-only behavior (local filesystem) vs. production SharePoint client expectations
+- Inline comments cite **BRD FR-012 validation retry & resume** and **PRD-TRD SharePoint tools section**
+
+**CLI --watch Polling Semantics (Demo Only):**
+
+- **Map BRD FR-012 "validation retry & resume" to polling design** consistent with PRD-TRD:
+  - In production: SharePoint webhook (BRD FR-012, PRD-TRD 4.1/4.4) would trigger re-validation
+  - In POC: CLI `--watch` mode periodically checks `sharepoint_simulation/uploads/<run-id>/` for new corrected file
+- **Detection rules** for "new corrected file":
+  - Any non-empty file created after `resume_state.timestamp` OR filename pattern like `<partner>_<quarter>_corrected.*`
+- Polling logic clearly commented as **demo-only** and does not violate PRD-TRD's production story (webhook-based)
+
+**Resume Flow After Approval:**
+
+1. Initial run halts on errors and writes resume state + simulated SharePoint folders
+2. Partner "uploads" corrected file into `sharepoint_simulation/uploads/<run-id>/` (demo: user drops file there or `UploadSharePointTool` called with `folder_type="upload"`)
+3. CLI `--watch` polling detects the file and calls `resume()`
+4. If validation passes: resume from canonicalization (PRD-TRD 7.1/7.4)
+5. If validation fails: repeat Part 3 HITL workflow
+
+**CLI Commands**:
 
 ```bash
-# Watch for corrected files in a directory
-python -m agentic_systems.cli.main watch --directory agentic_systems/data/corrected/ --pattern "*_corrected.csv"
+# Watch for corrected files in SharePoint simulation uploads folder
+python -m agentic_systems.cli.main run intake --watch demo-Q1-minimal
 
 # Manual resume with corrected file
-python -m agentic_systems.cli.main run intake --resume demo-Q1-minimal --file agentic_systems/data/corrected/Example_Quarterly_Data_Report_corrected.csv
+python -m agentic_systems.cli.main run intake --resume demo-Q1-minimal --file sharepoint_simulation/uploads/demo-Q1-minimal/Example_Quarterly_Data_Report_corrected.csv
 ```
+
+**Evidence Alignment:**
+
+- When resume runs, evidence bundle captures second validation + canonicalization per **FR-011**
+- Secure link / email behavior not triggered again unless new errors exist
+- Resume state updated to reflect resumed status
 
 
 
