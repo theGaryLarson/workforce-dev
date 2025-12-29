@@ -1,4 +1,115 @@
 client: CFA
-version: 0.1.0
-notes: |
-  Placeholder client configuration for CFA program scaffolding.
+version: 1.0.0
+description: |
+  CFA client configuration for validation rules, canonical mappings, and file structure.
+  Per PRD-TRD Section 5.4 and BRD Section 8.2.
+
+validation:
+  halt_on_error: true
+  halt_on_warning_threshold: null
+  max_warnings_before_halt: null
+  min_columns: 42
+  header_row: 1
+  data_start_row: 2
+  
+  enhanced_rules:
+    active_past_graduation:
+      enabled: true
+      severity: "Error"  # BRD Section 2.3: Error severity
+    name_misspelling:
+      enabled: false  # Requires WSAC data
+      severity: "Warning"  # BRD Section 2.3: Warning severity
+      similarity_threshold: 0.85  # BRD Section 2.3: "85% similarity threshold"
+    prevailing_wage:
+      enabled: false  # Uses hardcoded wage lookup table
+      severity: "Error"  # BRD Section 2.3: Error severity
+      blocks_wsac_entry: true  # BRD Section 2.3: "blocks WSAC entry"
+
+# Canonical field mappings: map canonical field names to header patterns
+# Patterns are matched case-insensitively against normalized headers
+canonical_mappings:
+  first_name:
+    patterns:
+      - "First Name"
+  
+  last_name:
+    patterns:
+      - "Last Name"
+  
+  date_of_birth:
+    patterns:
+      - "Date of Birth"
+  
+  address_1:
+    patterns:
+      - "Address 1"
+  
+  city:
+    patterns:
+      - "City"
+  
+  state:
+    patterns:
+      - "State (WA, etc.)"
+      - "State"
+  
+  zip_code:
+    patterns:
+      - "Zip Code"
+  
+  training_start_date:
+    patterns:
+      - "Training Start Date"
+  
+  training_exit_date:
+    patterns:
+      - "Training Exit Date"
+  
+  current_program_status:
+    patterns:
+      - "Current Program Status"
+  
+  completion_type:
+    patterns:
+      - "type of completion"
+  
+  noncompletion_reason:
+    patterns:
+      - "provide reason"
+  
+  noncompletion_other_specify:
+    patterns:
+      - 'reason for noncompletion is "other"'
+      - "noncompletion is 'other'"
+  
+  employment_status:
+    patterns:
+      - "Employment Status"
+  
+  employer_name:
+    patterns:
+      - "Employer Name"
+  
+  employment_type:
+    patterns:
+      - "Employment Type"
+  
+  earn_and_learn_specify:
+    patterns:
+      - "Earn and Learn Employment, specify type"
+  
+  job_start_date:
+    patterns:
+      - "Job start date"
+  
+  job_occupation:
+    patterns:
+      - "Job Occupation"
+  
+  hourly_earnings:
+    patterns:
+      - "hourly earnings"
+
+data_classification:
+  default: "Confidential"  # BRD Section 2.3: "Partner data is Confidential by default"
+  pii_handling: "minimized"  # BRD Section 2.3: "Data containing PII is Restricted"
