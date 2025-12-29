@@ -2,82 +2,32 @@
 
 import re
 from datetime import datetime, date
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
 from ..tools import ToolResult
+from .engine import ValidationEngine
 
 
 class ValidateStagedDataTool:
-    """Validates staged data with comprehensive business rules matching spreadsheet logic.
+    """Validates staged data using client-specific rules loaded from ValidationEngine.
     
     Implements header checks (A–AP), row-blank termination, canonical mapping,
     and row-level validation for program status, noncompletion, and employment.
+    Per PRD-TRD Section 5.4, rules are loaded from clients/{client_id}/rules.py.
     """
     
     name = "ValidateStagedDataTool"
     
-    # Approved completion types
-    COMPLETION_TYPES = [
-        'completed on-time (continuous training)',
-        'completed not on-time (non-continous training)'
-    ]
-    
-    # Approved noncompletion reasons
-    NONCOMPLETION_REASONS = [
-        'could not meet the technical requirements for graduation',
-        'withdrew due to family obligations',
-        'withdrew due to physical health reasons',
-        'withdrew due to mental health reasons',
-        'withdrew due to lack of adequate transportation',
-        'withdrew due to lack of childcare',
-        'withdrew due to financial obligations e.g., had to get a full-time job',
-        'dismissed due to behavior',
-        'did not meet attendance requirements',
-        'withdrew because they started a new job during training',
-        'other'
-    ]
-    
-    # Approved employment statuses
-    EMPLOYMENT_STATUSES = [
-        "employed in-field by an employer who doesn’t partner with your training program",
-        "employed in-field by an employer who partners with your training program",
-        "still seeking employment in-field",
-        "not seeking employment in-field",
-        "could not contact"
-    ]
-    
-    # Approved employment types
-    EMPLOYMENT_TYPES = [
-        'full-time employment',
-        'part-time employment',
-        'seasonal employment',
-        'earn and learn employment',
-        'other'
-    ]
-    
-    # Approved occupation codes
-    OCCUPATION_CODES = [
-        'computer systems analysts (15-1211)',
-        'information security analysts (15-1212)',
-        'computer and information research scientists (15-1221)',
-        'computer network support specialists (15-1231)',
-        'computer user support specialists (15-1232)',
-        'computer network architects (15-1241)',
-        'database administrators (15-1242)',
-        'database architects (15-1243)',
-        'network and computer systems administrators (15-1244)',
-        'computer programmers (15-1251)',
-        'software developers (15-1252)',
-        'software quality assurance analysts and testers (15-1253)',
-        'web developers (15-1254)',
-        'web and digital interface designers (15-1255)',
-        'operations research analysts (15-2031)',
-        'data scientists (15-2051)',
-        'computer hardware engineers (17-2061)',
-        'other computer occupations (15-1299)'
-    ]
+    def __init__(self, client_id: str = "cfa"):
+        """Initialize validation tool for a specific client.
+        
+        Args:
+            client_id: Client identifier (default: "cfa")
+        """
+        self.client_id = client_id
+        self.engine = ValidationEngine(client_id=client_id)
 
     def _normalize_string(self, val: Any) -> str:
         """Normalize strings by removing smart quotes, newlines, and extra whitespace."""
@@ -152,8 +102,9 @@ class ValidateStagedDataTool:
         return None
 
     def _get_canonical_mapping(self, headers: List[str]) -> Dict[str, str]:
-        """Map sheet headers to canonical keys robustly."""
+        """Map sheet headers to canonical keys using client-specific patterns."""
         mapping = {}
+        canonical_mappings = self.engine.get_canonical_mappings()
         
         # Helper to find a header by normalizing and checking substrings or patterns
         def find_match(canonical_key, patterns):
@@ -165,37 +116,32 @@ class ValidateStagedDataTool:
                         return True
             return False
 
-        find_match('first_name', ["First Name"])
-        find_match('last_name', ["Last Name"])
-        find_match('date_of_birth', ["Date of Birth"])
-        find_match('address_1', ["Address 1"])
-        find_match('city', ["City"])
-        find_match('state', ["State (WA, etc.)", "State"])
-        find_match('zip_code', ["Zip Code"])
-        find_match('training_start_date', ["Training Start Date"])
-        find_match('training_exit_date', ["Training Exit Date"])
-        find_match('current_program_status', ["Current Program Status"])
-        find_match('completion_type', ["type of completion"])
-        find_match('noncompletion_reason', ["provide reason"])
-        find_match('noncompletion_other_specify', ["reason for noncompletion is \"other\"", "noncompletion is 'other'"])
-        find_match('employment_status', ["Employment Status"])
-        find_match('employer_name', ["Employer Name"])
-        find_match('employment_type', ["Employment Type"])
-        find_match('earn_and_learn_specify', ["Earn and Learn Employment, specify type"])
-        find_match('job_start_date', ["Job start date"])
-        find_match('job_occupation', ["Job Occupation"])
-        find_match('hourly_earnings', ["hourly earnings"])
+        # Use patterns from client config instead of hardcoded
+        for canonical_key, mapping_config in canonical_mappings.items():
+            patterns = mapping_config.get("patterns", [])
+            find_match(canonical_key, patterns)
         
         return mapping
 
     def __call__(self, staged_data: pd.DataFrame) -> ToolResult:
-        """Validate staged data using spreadsheet-equivalent logic."""
+        """Validate staged data using client-specific rules."""
         violations = []
         error_count = 0
         warning_count = 0
         
+        # Load approved values and configuration from engine
+        completion_types = self.engine.get_approved_values("completion_types")
+        noncompletion_reasons = self.engine.get_approved_values("noncompletion_reasons")
+        employment_statuses = self.engine.get_approved_values("employment_statuses")
+        employment_types = self.engine.get_approved_values("employment_types")
+        occupation_codes = self.engine.get_approved_values("occupation_codes")
+        required_headers = self.engine.get_required_headers()
+        file_structure = self.engine.get_file_structure()
+        
         # 1. Sheet-level / header-row requirements (A–AP, first 42 columns)
-        max_cols = 42
+        max_cols = file_structure.get("min_columns", 42)
+        header_row = file_structure.get("header_row", 1)
+        data_start_row = file_structure.get("data_start_row", 2)
         if len(staged_data.columns) < max_cols:
             violations.append({
                 'row_index': 1,
@@ -236,11 +182,8 @@ class ValidateStagedDataTool:
             seen_headers[h_lower] = True
 
         # Required headers exact match (case-insensitive)
-        required = [
-            "First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1"
-        ]
         headers_lower = [self._normalize_string(h).lower() for h in headers]
-        for req in required:
+        for req in required_headers:
             if self._normalize_string(req).lower() not in headers_lower:
                 violations.append({
                     'row_index': 1,
@@ -253,30 +196,35 @@ class ValidateStagedDataTool:
         # Robust mapping
         col_map = self._get_canonical_mapping(headers)
         
+        # Helper function to get value and field name for reporting (used in main loop and enhanced rules)
+        def get_val_field(row, canonical_key):
+            """Get value and field name for a canonical key from a row."""
+            sheet_header = col_map.get(canonical_key)
+            if not sheet_header:
+                return None, f"MISSING_{canonical_key}"
+            return row.get(sheet_header), sheet_header
+        
         # 2. Row-level behavior
         now = datetime.now()
         today = datetime(now.year, now.month, now.day)
         
         for idx, row in staged_data.iterrows():
-            row_num = int(idx) + 2
+            row_num = int(idx) + data_start_row
             
             # Termination rule: stop at first row where A–AP are all blank
             row_slice = row.iloc[:max_cols]
             if row_slice.isna().all() or (row_slice.astype(str).str.strip() == '').all():
                 break
 
-            # Helper to get value and field name for reporting
-            def get_val_field(canonical_key):
-                sheet_header = col_map.get(canonical_key)
-                if not sheet_header:
-                    return None, f"MISSING_{canonical_key}"
-                return row.get(sheet_header), sheet_header
-
             # 3. Column-by-column requirements
+            # TODO: Field-level validation from FIELD_RULES not yet implemented.
+            # Current validation uses hardcoded logic. Future enhancement: drive
+            # conditional requirements, format constraints, and valid values from
+            # engine.get_field_rule() instead of hardcoded checks.
             
             # First Name & Last Name
             for key in ['first_name', 'last_name']:
-                val, field = get_val_field(key)
+                val, field = get_val_field(row, key)
                 if pd.isna(val) or not str(val).strip():
                     violations.append({
                         'row_index': row_num,
@@ -287,7 +235,7 @@ class ValidateStagedDataTool:
                     error_count += 1
 
             # Date of Birth
-            val_dob, field_dob = get_val_field('date_of_birth')
+            val_dob, field_dob = get_val_field(row, 'date_of_birth')
             dt_dob = self._parse_date(val_dob)
             if pd.isna(val_dob) or not str(val_dob).strip():
                 violations.append({
@@ -324,7 +272,7 @@ class ValidateStagedDataTool:
                     error_count += 1
 
             # Address 1
-            val_addr, field_addr = get_val_field('address_1')
+            val_addr, field_addr = get_val_field(row, 'address_1')
             if pd.isna(val_addr) or not str(val_addr).strip():
                 violations.append({
                     'row_index': row_num,
@@ -389,7 +337,7 @@ class ValidateStagedDataTool:
 
             # City, State
             for key in ['city', 'state']:
-                val, field = get_val_field(key)
+                val, field = get_val_field(row, key)
                 if pd.isna(val) or not str(val).strip():
                     violations.append({
                         'row_index': row_num,
@@ -400,7 +348,7 @@ class ValidateStagedDataTool:
                     error_count += 1
 
             # Zip Code - required + format validation
-            val_zip, field_zip = get_val_field('zip_code')
+            val_zip, field_zip = get_val_field(row, 'zip_code')
             if pd.isna(val_zip) or not str(val_zip).strip():
                 violations.append({
                     'row_index': row_num,
@@ -422,7 +370,7 @@ class ValidateStagedDataTool:
                     error_count += 1
 
             # Training Start Date
-            val_start, field_start = get_val_field('training_start_date')
+            val_start, field_start = get_val_field(row, 'training_start_date')
             dt_start = self._parse_date(val_start)
             if pd.isna(val_start) or not str(val_start).strip():
                 violations.append({
@@ -450,13 +398,13 @@ class ValidateStagedDataTool:
                 error_count += 1
 
             # Training Exit Date
-            val_exit, field_exit = get_val_field('training_exit_date')
+            val_exit, field_exit = get_val_field(row, 'training_exit_date')
             dt_exit = self._parse_date(val_exit)
             
             # exit date is required if status is graduated or noncompletion reason provided
-            status_raw, field_status = get_val_field('current_program_status')
+            status_raw, field_status = get_val_field(row, 'current_program_status')
             status = self._normalize_string(status_raw).lower()
-            nc_reason_raw, _ = get_val_field('noncompletion_reason')
+            nc_reason_raw, _ = get_val_field(row, 'noncompletion_reason')
             nc_reason = self._normalize_string(nc_reason_raw).lower()
             
             exit_required = (status == 'graduated/completed') or (bool(nc_reason))
@@ -506,21 +454,21 @@ class ValidateStagedDataTool:
                 })
                 error_count += 1
             
-            # Reverse conditional: If Training Exit Date is provided AND in the past, status must be Graduated/Withdrawn
-            if not pd.isna(val_exit) and str(val_exit).strip() and dt_exit is not None and dt_exit < today:
+            # Reverse conditional: If Training Exit Date is provided, status must be Graduated/Withdrawn
+            if not pd.isna(val_exit) and str(val_exit).strip() and dt_exit is not None:
                 if status not in ['graduated/completed', 'withdrawn/terminated']:
                     violations.append({
                         'row_index': row_num,
                         'field': field_status,
                         'severity': 'Error',
-                        'message': 'When "Training Exit Date" is in the past, Current Program Status must be "Graduated/completed" or "Withdrawn/terminated".'
+                        'message': 'When "Training Exit Date" is provided, Current Program Status must be "Graduated/completed" or "Withdrawn/terminated".'
                     })
                     error_count += 1
             
             # Program status conditionals
             if status == 'withdrawn/terminated':
                 if not nc_reason:
-                    _, f_nc = get_val_field('noncompletion_reason')
+                    _, f_nc = get_val_field(row, 'noncompletion_reason')
                     violations.append({
                         'row_index': row_num,
                         'field': f_nc,
@@ -530,7 +478,7 @@ class ValidateStagedDataTool:
                     error_count += 1
             
             if status == 'graduated/completed':
-                val_ct, field_ct = get_val_field('completion_type')
+                val_ct, field_ct = get_val_field(row, 'completion_type')
                 ct = self._normalize_string(val_ct).lower()
                 if not ct:
                     violations.append({
@@ -540,7 +488,7 @@ class ValidateStagedDataTool:
                         'message': 'If Graduated/Completed, type of completion becomes required.'
                     })
                     error_count += 1
-                elif ct not in self.COMPLETION_TYPES:
+                elif ct not in [c.lower() for c in completion_types]:
                     violations.append({
                         'row_index': row_num,
                         'field': field_ct,
@@ -551,8 +499,8 @@ class ValidateStagedDataTool:
 
             # Noncompletion rules
             if nc_reason:
-                if nc_reason not in self.NONCOMPLETION_REASONS:
-                    _, f_nc = get_val_field('noncompletion_reason')
+                if nc_reason not in [r.lower() for r in noncompletion_reasons]:
+                    _, f_nc = get_val_field(row, 'noncompletion_reason')
                     violations.append({
                         'row_index': row_num,
                         'field': f_nc,
@@ -562,7 +510,7 @@ class ValidateStagedDataTool:
                     error_count += 1
                 
                 if nc_reason == 'other':
-                    val_nos, field_nos = get_val_field('noncompletion_other_specify')
+                    val_nos, field_nos = get_val_field(row, 'noncompletion_other_specify')
                     if pd.isna(val_nos) or not str(val_nos).strip():
                         violations.append({
                             'row_index': row_num,
@@ -573,12 +521,12 @@ class ValidateStagedDataTool:
                         error_count += 1
 
             # Employment rules
-            emp_status_raw, field_es = get_val_field('employment_status')
+            emp_status_raw, field_es = get_val_field(row, 'employment_status')
             emp_status = self._normalize_string(emp_status_raw).lower()
             is_employed = emp_status.startswith('employed in-field')
             
             # Normalize approved list items for comparison
-            normalized_approved = [self._normalize_string(s).lower() for s in self.EMPLOYMENT_STATUSES]
+            normalized_approved = [self._normalize_string(s).lower() for s in employment_statuses]
             
             if emp_status and emp_status not in normalized_approved:
                 violations.append({
@@ -591,7 +539,7 @@ class ValidateStagedDataTool:
 
             # Details filled check
             detail_keys = ['employer_name', 'employment_type', 'job_start_date', 'job_occupation', 'hourly_earnings']
-            details_filled = any(not pd.isna(get_val_field(k)[0]) and str(get_val_field(k)[0]).strip() for k in detail_keys)
+            details_filled = any(not pd.isna(get_val_field(row, k)[0]) and str(get_val_field(row, k)[0]).strip() for k in detail_keys)
             
             if details_filled and not is_employed:
                 violations.append({
@@ -604,23 +552,23 @@ class ValidateStagedDataTool:
 
             if is_employed:
                 # Employer Name
-                v_en, f_en = get_val_field('employer_name')
+                v_en, f_en = get_val_field(row, 'employer_name')
                 if pd.isna(v_en) or not str(v_en).strip():
                     violations.append({ 'row_index': row_num, 'field': f_en, 'severity': 'Error', 'message': 'Employer Name is required when employed.' })
                     error_count += 1
                 
                 # Employment Type
-                v_et, f_et = get_val_field('employment_type')
+                v_et, f_et = get_val_field(row, 'employment_type')
                 et = self._normalize_string(v_et).lower()
                 if not et:
                     violations.append({ 'row_index': row_num, 'field': f_et, 'severity': 'Error', 'message': 'Employment Type is required when employed.' })
                     error_count += 1
-                elif et not in self.EMPLOYMENT_TYPES:
+                elif et not in [e.lower() for e in employment_types]:
                     violations.append({ 'row_index': row_num, 'field': f_et, 'severity': 'Error', 'message': 'Employment Type must be one of the allowed types.' })
                     error_count += 1
                 
                 # Earn and Learn specify
-                v_els, f_els = get_val_field('earn_and_learn_specify')
+                v_els, f_els = get_val_field(row, 'earn_and_learn_specify')
                 if et == 'earn and learn employment':
                     if pd.isna(v_els) or not str(v_els).strip():
                         violations.append({ 'row_index': row_num, 'field': f_els, 'severity': 'Error', 'message': 'Specify type is required when Employment Type is “Earn and Learn employment”.' })
@@ -631,29 +579,139 @@ class ValidateStagedDataTool:
                         error_count += 1
 
                 # Job Start Date
-                v_jsd, f_jsd = get_val_field('job_start_date')
+                v_jsd, f_jsd = get_val_field(row, 'job_start_date')
                 if pd.isna(v_jsd) or not str(v_jsd).strip():
                     violations.append({ 'row_index': row_num, 'field': f_jsd, 'severity': 'Error', 'message': 'Job start date is required when employed.' })
                     error_count += 1
-
+                
                 # Job Occupation
-                v_jo, f_jo = get_val_field('job_occupation')
+                v_jo, f_jo = get_val_field(row, 'job_occupation')
                 jo = self._normalize_string(v_jo).lower()
                 if not jo:
                     violations.append({ 'row_index': row_num, 'field': f_jo, 'severity': 'Error', 'message': 'Job Occupation is required when employed.' })
                     error_count += 1
-                elif jo not in [o.lower() for o in self.OCCUPATION_CODES]:
+                elif jo not in [o.lower() for o in occupation_codes]:
                     violations.append({ 'row_index': row_num, 'field': f_jo, 'severity': 'Error', 'message': 'Job Occupation must match one of the approved options.' })
                     error_count += 1
 
                 # Hourly Earnings
-                v_he, f_he = get_val_field('hourly_earnings')
+                v_he, f_he = get_val_field(row, 'hourly_earnings')
                 if pd.isna(v_he) or not str(v_he).strip():
                     violations.append({ 'row_index': row_num, 'field': f_he, 'severity': 'Error', 'message': 'Required when Employment Status is employed.' })
                     error_count += 1
 
+        # Enhanced rules validation (gated by enablement in YAML config)
+        # Per BRD Section 2.3 and Task 9: Check enablement before executing enhanced rules
+        enhanced_rules = self.engine.get_enhanced_rules()
+        
+        # Enhanced Rule: active_past_graduation
+        # Check if Training Exit Date is provided but status is not Graduated/Withdrawn
+        # Note: This rule is now redundant with the main validation logic above, but kept for
+        # backward compatibility with enhanced rules configuration
+        active_past_graduation_config = self.engine.get_enhanced_rule_config("active_past_graduation")
+        if active_past_graduation_config and active_past_graduation_config.get("enabled", False):
+            for idx, row in staged_data.iterrows():
+                row_num = int(idx) + data_start_row
+                
+                # Termination rule: stop at first blank row
+                row_slice = row.iloc[:max_cols]
+                if row_slice.isna().all() or (row_slice.astype(str).str.strip() == '').all():
+                    break
+                
+                status_raw, field_status = get_val_field(row, 'current_program_status')
+                status = self._normalize_string(status_raw).lower()
+                val_exit, field_exit = get_val_field(row, 'training_exit_date')
+                dt_exit = self._parse_date(val_exit)
+                
+                # Check if Training Exit Date is provided but status is not Graduated/Withdrawn
+                if not pd.isna(val_exit) and str(val_exit).strip() and dt_exit is not None:
+                    if status not in ['graduated/completed', 'withdrawn/terminated']:
+                        violations.append({
+                            'row_index': row_num,
+                            'field': field_status,
+                            'severity': active_past_graduation_config.get("severity", "Error"),
+                            'message': 'When "Training Exit Date" is provided, Current Program Status must be "Graduated/completed" or "Withdrawn/terminated".'
+                        })
+                        error_count += 1
+        
+        # Enhanced Rule: prevailing_wage
+        # Validate job placements meet prevailing wage requirements (hardcoded lookup table)
+        prevailing_wage_config = self.engine.get_enhanced_rule_config("prevailing_wage")
+        if prevailing_wage_config and prevailing_wage_config.get("enabled", False):
+            # Hardcoded prevailing wage lookup table (occupation code + region)
+            # Per plan: "Uses hardcoded wage lookup table" (not external API)
+            # TODO: Implement hardcoded wage lookup table when prevailing_wage rule is enabled
+            # For now, this is a placeholder that can be expanded with actual wage data
+            for idx, row in staged_data.iterrows():
+                row_num = int(idx) + data_start_row
+                
+                # Termination rule: stop at first blank row
+                row_slice = row.iloc[:max_cols]
+                if row_slice.isna().all() or (row_slice.astype(str).str.strip() == '').all():
+                    break
+                
+                emp_status_raw, field_es = get_val_field(row, 'employment_status')
+                emp_status = self._normalize_string(emp_status_raw).lower()
+                is_employed = emp_status.startswith('employed in-field')
+                
+                if is_employed:
+                    v_jo, f_jo = get_val_field(row, 'job_occupation')
+                    v_he, f_he = get_val_field(row, 'hourly_earnings')
+                    
+                    # Only check if both occupation and earnings are present
+                    if not pd.isna(v_jo) and str(v_jo).strip() and not pd.isna(v_he) and str(v_he).strip():
+                        try:
+                            hourly_wage = float(v_he)
+                            # TODO: Add hardcoded wage lookup table here
+                            # For now, this is a placeholder - actual implementation would:
+                            # 1. Extract occupation code from job_occupation
+                            # 2. Determine region (from address or default)
+                            # 3. Look up prevailing wage from hardcoded table
+                            # 4. Compare hourly_wage with prevailing_wage
+                            # 5. Flag error if hourly_wage < prevailing_wage
+                            # Note: This is intentionally not implemented yet as the wage lookup table
+                            # needs to be defined per BRD requirements
+                        except (ValueError, TypeError):
+                            # Invalid hourly earnings format - already caught by main validation
+                            pass
+        
+        # Enhanced Rule: name_misspelling
+        # Compare canonical participant names with WSAC prior-quarter data (requires WSAC data)
+        name_misspelling_config = self.engine.get_enhanced_rule_config("name_misspelling")
+        if name_misspelling_config and name_misspelling_config.get("enabled", False):
+            # This rule requires WSAC prior-quarter data, which is not available in validate_tool.py
+            # It will be implemented in CollectWSACAggregatesTool per POC Part 3
+            # Per plan: "name_misspelling: enabled: false  # Requires WSAC data"
+            # This is a placeholder for future integration
+            pass
+
+        # Implement halt logic per BRD Section 2.3
+        halt_on_error = self.engine.should_halt_on_error()
+        warning_threshold = self.engine.get_warning_threshold()
+        
+        should_halt = False
+        halt_reasons = []
+        
+        if halt_on_error and error_count > 0:
+            should_halt = True
+            halt_reasons.append(f"Halted: {error_count} errors found (halt_on_error enabled)")
+        
+        if warning_threshold is not None and warning_count >= warning_threshold:
+            should_halt = True
+            halt_reasons.append(f"Halted: {warning_count} warnings exceed threshold of {warning_threshold}")
+        
+        # Determine ok status: no errors AND not halted by warning threshold
+        ok_status = error_count == 0 and not should_halt
+        
+        # Build blockers list
+        blockers = []
+        if should_halt:
+            blockers.extend(halt_reasons)
+        elif error_count > 0:
+            blockers.append(f"{error_count} errors found")
+
         return ToolResult(
-            ok=error_count == 0,
+            ok=ok_status,
             summary=f"Validation complete: {error_count} errors, {warning_count} warnings",
             data={
                 'violations': violations,
@@ -662,5 +720,5 @@ class ValidateStagedDataTool:
                 'total_violations': len(violations)
             },
             warnings=[f"{warning_count} warnings found"] if warning_count > 0 else [],
-            blockers=[f"{error_count} errors found"] if error_count > 0 else []
+            blockers=blockers
         )
