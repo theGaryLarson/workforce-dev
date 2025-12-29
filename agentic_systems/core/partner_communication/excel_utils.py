@@ -7,7 +7,8 @@ for validation errors. Used by:
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+import re
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.comments import Comment
@@ -18,6 +19,65 @@ from openpyxl.styles import PatternFill
 ERROR_FILL = PatternFill(patternType="solid", fgColor="FFC7CE")  # Light red
 WARNING_FILL = PatternFill(patternType="solid", fgColor="FFEB9C")  # Light yellow
 INFO_FILL = PatternFill(patternType="solid", fgColor="BDD7EE")  # Light blue
+
+
+def _standardize_phone_number(val: Any) -> Optional[str]:
+    """Standardize phone number to XXX-XXX-XXXX format.
+    
+    Extracts digits from phone number and formats as XXX-XXX-XXXX.
+    Handles various input formats:
+    - (206) 555-1234
+    - 206-555-1234
+    - 206.555.1234
+    - 2065551234
+    - +1-206-555-1234 (US country code)
+    - 1-206-555-1234 (US country code)
+    - 001-206-555-1234 (international format with 001 prefix)
+    - (206) 555-1234 x567 (extensions ignored)
+    
+    Args:
+        val: Phone number value (string, number, etc.)
+    
+    Returns:
+        Standardized phone number in XXX-XXX-XXXX format, or original value if invalid/empty
+    """
+    if pd.isna(val) or val is None:
+        return val
+    
+    # Convert to string and strip whitespace
+    phone_str = str(val).strip()
+    
+    # Handle international format: 001-XXX-XXX-XXXX
+    # Remove "001-" prefix if present (common international dialing prefix)
+    if phone_str.startswith('001-') or phone_str.startswith('001 '):
+        phone_str = phone_str[4:].strip()
+    elif phone_str.startswith('001'):
+        # Handle cases like "0012065551234" (no separator)
+        if len(phone_str) > 3 and phone_str[3].isdigit():
+            phone_str = phone_str[3:]
+    
+    # Extract all digits
+    digits_only = re.sub(r'\D', '', phone_str)
+    
+    # Must have at least 10 digits (US phone number)
+    if len(digits_only) < 10:
+        return val  # Return original if invalid
+    
+    # Handle US country code: if 11 digits and starts with 1, remove the leading 1
+    if len(digits_only) == 11 and digits_only[0] == '1':
+        digits_only = digits_only[1:]  # Remove country code
+    
+    # If still more than 10 digits, take last 10 (handles extensions and extra prefixes)
+    # This ensures we get the actual phone number, not prefixes
+    if len(digits_only) > 10:
+        digits_only = digits_only[-10:]  # Take last 10 digits
+    
+    # Must have exactly 10 digits at this point
+    if len(digits_only) != 10:
+        return val  # Return original if invalid
+    
+    # Format as XXX-XXX-XXXX
+    return f"{digits_only[0:3]}-{digits_only[3:6]}-{digits_only[6:10]}"
 
 
 def _get_action_guidance(message: str, severity: str) -> str:
@@ -72,16 +132,16 @@ def create_error_excel_with_comments(
     output_path: Path,
     col_map: Dict[str, str] = None
 ) -> None:
-    """Create an Excel file with rows containing errors and cell comments.
+    """Create an Excel file with all rows, adding error comments and color-coding.
     
-    This function creates an Excel file containing only rows with validation errors,
-    with cell comments added to cells that have errors. The comments contain the
-    error message for that specific field.
+    This function creates an Excel file containing ALL rows from the DataFrame,
+    preserving original order, with cell comments and color-coding added to cells
+    that have errors. The comments contain the error message for that specific field.
     
     Implements FR-012 requirements for review worksheet generation:
     - Color-coding by severity (Error=red, Warning=yellow, Info=blue)
-    - Action Required column with specific guidance
-    - Notes column for additional context
+    - Cell comments with error messages
+    - All records included, preserving original order
     
     Args:
         df: Original DataFrame with all data (must include header row)
@@ -99,32 +159,39 @@ def create_error_excel_with_comments(
         - Header errors (row_index == 1) are not included in the Excel file
         - Cells are color-coded by severity per FR-012: Error=red, Warning=yellow, Info=blue
         - Cell comments contain the error message for that specific field
-        - The Excel file includes all original columns plus error metadata columns:
-          - _error_fields: Comma-separated list of fields with errors
-          - _error_messages: Semicolon-separated list of error messages
-          - _severity: Highest severity level for the row
-          - Action Required: Specific guidance for correcting the error (per FR-012)
-          - Notes: Additional context column (empty by default, can be populated)
+        - The Excel file includes ALL rows (not just error rows) preserving original order
+        - The Excel file includes all original columns only (no error metadata columns)
+        - Error information is shown via cell comments and color-coding only
     
     Use Cases:
         - Part 3 POC: GeneratePartnerErrorReportTool creates partner error reports
         - FR-012: Generate review worksheet for human review with color-coding and action guidance
     """
-    # Filter to rows with errors (row_index > 1, since row_index 1 is header errors)
+    # Get all rows with errors (row_index > 1, since row_index 1 is header errors)
     error_row_indices = {v['row_index'] for v in violations if v['row_index'] > 1}
     
-    if not error_row_indices:
-        # No data rows with errors, create empty file with headers only
-        df.iloc[:0].to_excel(output_path, index=False, engine='openpyxl')
-        return
+    # Include ALL rows from the DataFrame, preserving original order
+    # This ensures partners can see all their data, not just rows with errors
+    result_df = df.copy()
+    
+    # Standardize phone numbers to XXX-XXX-XXXX format
+    # Find phone column by checking common header patterns
+    phone_col = None
+    for col in result_df.columns:
+        col_lower = str(col).lower().strip()
+        if 'phone' in col_lower:
+            phone_col = col
+            break
+    
+    if phone_col:
+        # Apply phone number standardization to all rows
+        result_df[phone_col] = result_df[phone_col].apply(_standardize_phone_number)
     
     # Get rows with errors (convert row_index to 0-based index: row_index 2 -> index 0)
     # row_index 2 = first data row = DataFrame index 0
-    error_indices = [idx - 2 for idx in error_row_indices if idx >= 2]
-    error_df = df.iloc[error_indices].copy()
+    error_indices = {idx - 2 for idx in error_row_indices if idx >= 2}
     
-    # Add error metadata columns
-    # Group violations by row_index for aggregation
+    # Group violations by row_index for adding comments and color-coding
     violations_by_row = {}
     for v in violations:
         if v['row_index'] > 1:  # Skip header errors
@@ -133,52 +200,8 @@ def create_error_excel_with_comments(
                 violations_by_row[row_idx] = []
             violations_by_row[row_idx].append(v)
     
-    # Add aggregated error columns per FR-012 requirements
-    error_fields_list = []
-    error_messages_list = []
-    severity_list = []
-    action_required_list = []
-    notes_list = []
-    
-    for orig_row_idx in sorted(error_row_indices):
-        if orig_row_idx >= 2:
-            row_violations = violations_by_row.get(orig_row_idx, [])
-            fields = [v['field'] for v in row_violations]
-            messages = [v['message'] for v in row_violations]
-            severities = [v.get('severity', 'Error') for v in row_violations]
-            
-            error_fields_list.append(', '.join(fields))
-            error_messages_list.append('; '.join(messages))
-            
-            # Highest severity: Error > Warning > Info
-            if 'Error' in severities:
-                highest_severity = 'Error'
-            elif 'Warning' in severities:
-                highest_severity = 'Warning'
-            else:
-                highest_severity = 'Info'
-            severity_list.append(highest_severity)
-            
-            # Generate action guidance from first violation (most critical)
-            primary_violation = row_violations[0]
-            action_guidance = _get_action_guidance(
-                primary_violation['message'],
-                primary_violation.get('severity', 'Error')
-            )
-            action_required_list.append(action_guidance)
-            
-            # Notes column (empty by default, can be populated by caller if needed)
-            notes_list.append('')
-    
-    # Add error metadata columns per FR-012 (color-coding, action required, notes)
-    error_df['_error_fields'] = error_fields_list
-    error_df['_error_messages'] = error_messages_list
-    error_df['_severity'] = severity_list
-    error_df['Action Required'] = action_required_list
-    error_df['Notes'] = notes_list
-    
-    # Write to Excel first
-    error_df.to_excel(output_path, index=False, engine='openpyxl')
+    # Write to Excel first (all rows, preserving original order)
+    result_df.to_excel(output_path, index=False, engine='openpyxl')
     
     # Load workbook to add comments
     wb = load_workbook(output_path)
@@ -193,12 +216,12 @@ def create_error_excel_with_comments(
     # Map original row indices to Excel row numbers
     # Excel row 1 = header, Excel row 2 = first data row
     # Original row_index 2 = first data row = Excel row 2
+    # Since we include all rows, the mapping is straightforward
     excel_row_map = {}  # Maps original row_index to Excel row number
-    excel_row = 2  # Start after header row
-    for orig_idx in sorted(error_row_indices):
-        if orig_idx >= 2:
-            excel_row_map[orig_idx] = excel_row
-            excel_row += 1
+    for df_idx in range(len(result_df)):
+        orig_row_idx = df_idx + 2  # Convert DataFrame index to 1-based row_index
+        excel_row = df_idx + 2  # Excel row number (row 1 is header, row 2 is first data row)
+        excel_row_map[orig_row_idx] = excel_row
     
     # Add comments and color-coding by severity per FR-012
     for orig_row_idx, row_violations in violations_by_row.items():

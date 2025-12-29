@@ -31,6 +31,8 @@ class RequestStaffApprovalTool:
         error_summary: Dict[str, Any],
         partner_name: str,
         quarter: str,
+        year: Optional[str] = None,
+        aggregates: Optional[Dict[str, Any]] = None,
         demo_mode: bool = True,
         approval_recipients: Optional[List[str]] = None,
     ) -> ToolResult:
@@ -99,6 +101,34 @@ class RequestStaffApprovalTool:
         total_warnings = error_summary.get('total_warnings', 0)
         print(f"\n  Total Errors: {total_errors}")
         print(f"  Total Warnings: {total_warnings}")
+        
+        # Display WSAC Aggregates Summary if available per BRD FR-004
+        if aggregates:
+            print("\n" + "-" * 80)
+            print("WSAC Aggregates Summary:")
+            print("-" * 80)
+            print(f"  Total Participants: {aggregates.get('total_participants', 0)}")
+            print(f"  Total Enrollments: {aggregates.get('total_enrollments', 0)}")
+            print(f"  Total Employment Placements: {aggregates.get('total_employment_placements', 0)}")
+            
+            status_breakdown = aggregates.get('status_breakdown', {})
+            if status_breakdown:
+                print(f"\n  Status Breakdown:")
+                print(f"    Active: {status_breakdown.get('active', 0)}")
+                print(f"    Graduated: {status_breakdown.get('graduated', 0)}")
+                print(f"    Withdrawn: {status_breakdown.get('withdrawn', 0)}")
+            
+            wraparound = aggregates.get('wraparound_services', {})
+            usage_counts = wraparound.get('usage_counts', {})
+            if usage_counts and any(usage_counts.values()):
+                print(f"\n  Wraparound Services Usage:")
+                from ...clients.cfa.rules import WRAPAROUND_SERVICE_NAMES
+                for service_type, count in usage_counts.items():
+                    if count > 0:
+                        service_name = WRAPAROUND_SERVICE_NAMES.get(service_type, service_type.replace('_', ' ').title())
+                        print(f"    {service_name}: {count} participants")
+            
+            print("-" * 80)
         
         # Display email preview
         print("\n" + "-" * 80)

@@ -85,18 +85,29 @@ class UploadSharePointTool:
         # DEMO IMPLEMENTATION: Local filesystem "SharePoint" simulation
         if demo_mode:
             base_sim_dir = evidence_dir / "sharepoint_simulation"
-            # Map folder_type to simulated subfolder names
+            
+            # Initialize all three folder types for the run_id (per POC plan structure)
+            # This ensures the uploads folder exists even if not immediately used
+            # Per POC plan: sharepoint_simulation/internal/, partner_accessible/, and uploads/
+            internal_dir = base_sim_dir / "internal" / run_id
+            partner_dir = base_sim_dir / "partner_accessible" / run_id
+            uploads_dir = base_sim_dir / "uploads" / run_id
+            
+            # Create all three directories upfront so partners know where to upload corrected files
+            internal_dir.mkdir(parents=True, exist_ok=True)
+            partner_dir.mkdir(parents=True, exist_ok=True)
+            uploads_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Map folder_type to the appropriate directory
             if folder_type == "internal":
-                stage_dir = base_sim_dir / "internal" / run_id
-            elif folder_type == "partner":
-                stage_dir = base_sim_dir / "partner_accessible" / run_id
+                stage_dir = internal_dir
+            elif folder_type == "partner" or folder_type == "partner_accessible":
+                stage_dir = partner_dir
             else:
                 # "upload": simulated partner upload folder for corrected files.
                 # This allows testing resume/polling flows after approval in the POC
                 # without real SharePoint + webhooks (BRD FR-012 validation retry).
-                stage_dir = base_sim_dir / "uploads" / run_id
-
-            stage_dir.mkdir(parents=True, exist_ok=True)
+                stage_dir = uploads_dir
 
             # File name convention: <partner>_<quarter>_<original_name>
             dest_name = f"{partner_name}_{quarter}_{file_path.name}"
