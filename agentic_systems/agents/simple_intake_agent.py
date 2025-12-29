@@ -9,9 +9,11 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .base_agent import BaseAgent
+from ..core.tools import ToolResult
 from ..core.canonical.canonicalize_tool import CanonicalizeStagedDataTool
 from ..core.ingestion.ingest_tool import IngestPartnerFileTool
 from ..core.validation.validate_tool import ValidateStagedDataTool
+from ..core.partner_communication.collect_wsac_aggregates_tool import CollectWSACAggregatesTool
 from ..core.partner_communication.generate_error_report_tool import GeneratePartnerErrorReportTool
 from ..core.partner_communication.generate_email_tool import GeneratePartnerEmailTool
 from ..core.partner_communication.secure_link_tool import CreateSecureLinkTool
@@ -33,9 +35,7 @@ class SimpleIntakeAgent(BaseAgent):
             run_id: Run identifier for evidence bundle
             evidence_dir: Directory for evidence bundle (where tool_calls.jsonl is written)
         """
-        self.run_id = run_id
-        self.evidence_dir = evidence_dir
-        self.tool_calls_log = []
+        super().__init__(run_id=run_id, evidence_dir=evidence_dir)
         
         # Initialize tools per PRD-TRD Section 5.4
         self.ingest_tool = IngestPartnerFileTool()
@@ -43,13 +43,14 @@ class SimpleIntakeAgent(BaseAgent):
         self.canonicalize_tool = CanonicalizeStagedDataTool()
         
         # Part 3: HITL partner communication tools per BRD FR-012
+        self.wsac_aggregates_tool = CollectWSACAggregatesTool()
         self.error_report_tool = GeneratePartnerErrorReportTool()
         self.email_tool = GeneratePartnerEmailTool()
         self.secure_link_tool = CreateSecureLinkTool()
         self.approval_tool = RequestStaffApprovalTool()
         self.upload_sharepoint_tool = UploadSharePointTool()
         
-        # Tool registry for execute()
+        # Tool registry for execute() - populated in BaseAgent
         self.tools = {
             'IngestPartnerFileTool': self.ingest_tool,
             'ValidateStagedDataTool': self.validate_tool,
@@ -156,175 +157,245 @@ class SimpleIntakeAgent(BaseAgent):
             }
         ]
     
-    def _emit(self, event_type: str, message: str, data: Dict[str, Any]) -> None:
-        """Emit trace event to tool_calls.jsonl per PRD-TRD Section 7.4.
-        
-        BaseAgent.execute() wraps tool calls and appends JSONL events directly to
-        tool_calls.jsonl as tools run (BaseAgent owns tool_calls.jsonl writing).
+    def _invoke_tool(self, tool_name: str, tool: Any, tool_args: Dict[str, Any], 
+                    context: Dict[str, Any]) -> ToolResult:
+        """Invoke tool, handling special cases where tools take DataFrames as positional args.
         
         Args:
-            event_type: Type of event (STEP_START, STEP_END)
-            message: Human-readable message
-            data: Sanitized metadata only (counts, hashes, status) - no DataFrames or raw data
-        """
-        event = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "event_type": event_type,
-            "run_id": self.run_id,
-            "message": message,
-            "data": data
-        }
+            tool_name: Name of the tool
+            tool: Tool instance
+            tool_args: Prepared arguments dictionary
+            context: Execution context
         
-        # Store in memory for now, will write to file at end
-        self.tool_calls_log.append(event)
-        
-        # Append to tool_calls.jsonl per BRD FR-011
-        if self.evidence_dir:
-            tool_calls_path = self.evidence_dir / "tool_calls.jsonl"
-            with open(tool_calls_path, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(event) + '\n')
-    
-    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Orchestrate tools to fulfill the plan per PRD-TRD Section 5.1.
-        
-        Wraps each tool call with evidence logging per PRD-TRD Section 7.4.
-        Emits STEP_START and STEP_END events to tool_calls.jsonl with sanitized
-        metadata only (counts, hashes, status) - no DataFrames or raw data.
-        
-        Args:
-            inputs: Dictionary containing file_path and run_id
-            
         Returns:
-            Dictionary with step outcomes and canonical data (in-memory objects in data)
+            ToolResult from tool execution
         """
-        plan_steps = self.plan(inputs)
-        results = {}
-        staged_dataframe = None
+        # Some tools take DataFrames as positional arguments, not keyword arguments
+        if tool_name in ['ValidateStagedDataTool', 'CanonicalizeStagedDataTool']:
+            if 'dataframe' in tool_args:
+                # These tools take DataFrame as positional parameter
+                dataframe = tool_args.pop('dataframe')
+                return tool(dataframe)
         
-        for step in plan_steps:
-            tool_name = step['tool']
-            tool_args = step['args'].copy()
+        # Default: invoke with keyword arguments
+        return tool(**tool_args)
+
+    def _prepare_tool_args(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Inject staged_dataframe into tool args when needed.
+        
+        Args:
+            step: Step dictionary with 'tool' and 'args' keys
+            context: Execution context (e.g., staged_dataframe from previous steps)
+        
+        Returns:
+            Prepared arguments dictionary
+        """
+        tool_name = step['tool']
+        args = step['args'].copy()
+        
+        # Inject DataFrame from context for tools that need it
+        if tool_name in ['ValidateStagedDataTool', 'CanonicalizeStagedDataTool']:
+            if 'staged_dataframe' in context:
+                args['dataframe'] = context['staged_dataframe']
+        
+        return args
+
+    def _handle_tool_result(self, step: Dict[str, Any], result: ToolResult, 
+                           context: Dict[str, Any]) -> None:
+        """Update context with DataFrames for chaining between steps.
+        
+        Args:
+            step: Step dictionary
+            result: ToolResult from tool execution
+            context: Execution context (can be modified)
+        """
+        tool_name = step['tool']
+        
+        # Store DataFrames in context for chaining
+        if tool_name == 'IngestPartnerFileTool' and result.ok:
+            context['staged_dataframe'] = result.data.get('dataframe')
+        elif tool_name == 'ValidateStagedDataTool' and result.ok:
+            # Validation doesn't modify the dataframe, pass it through
+            # staged_dataframe should already be in context from previous step
+            pass
+        elif tool_name == 'CanonicalizeStagedDataTool' and result.ok:
+            context['canonical_dataframe'] = result.data.get('canonical_dataframe')
+    
+    def _handle_custom_orchestration(self, step: Dict[str, Any], result: ToolResult,
+                                    context: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle HITL workflow after validation per BRD FR-012.
+        
+        Args:
+            step: Completed step dictionary
+            result: ToolResult from step
+            context: Execution context
+            inputs: Original inputs
+        
+        Returns:
+            Dictionary of additional results from HITL workflow
+        """
+        tool_name = step['tool']
+        results = {}
+        
+        # Part 3: HITL workflow per BRD FR-012
+        # After validation, check for errors and trigger HITL workflow if needed
+        if tool_name == 'ValidateStagedDataTool':
+            violations = result.data.get('violations', [])
+            error_count = result.data.get('error_count', 0)
             
-            # Emit STEP_START event to tool_calls.jsonl per BRD FR-011
-            self._emit("STEP_START", f"Executing {tool_name}", {
-                "tool": tool_name,
-                "args": tool_args
-            })
-            
-            # Get tool instance
-            tool = self.tools[tool_name]
-            
-            # Pass dataframe from previous step if needed
-            if tool_name == 'ValidateStagedDataTool' and staged_dataframe is not None:
-                # ValidateStagedDataTool expects DataFrame as parameter
-                result = tool(staged_dataframe)
-            elif tool_name == 'CanonicalizeStagedDataTool' and staged_dataframe is not None:
-                # CanonicalizeStagedDataTool expects DataFrame as parameter
-                result = tool(staged_dataframe)
-            else:
-                # Invoke tool with args - returns ToolResult with in-memory data for chaining per PRD-TRD Section 5.4
-                result = tool(**tool_args)
-            
-            # Store dataframe for next step
-            if tool_name == 'IngestPartnerFileTool' and result.ok:
-                staged_dataframe = result.data.get('dataframe')
-            elif tool_name == 'ValidateStagedDataTool' and result.ok:
-                # Validation doesn't modify the dataframe, pass it through
-                staged_dataframe = staged_dataframe  # Keep same dataframe
-            elif tool_name == 'CanonicalizeStagedDataTool' and result.ok:
-                staged_dataframe = result.data.get('canonical_dataframe')
-            
-            # Emit STEP_END with sanitized metadata only (no DataFrames) per PRD-TRD Section 3.2
-            sanitized_data = {
-                "tool": tool_name,
-                "ok": result.ok,
-                "summary": result.summary
-            }
-            
-            # Add sanitized metadata only (counts, hashes, status) - no raw data
-            if 'row_count' in result.data:
-                sanitized_data['row_count'] = result.data['row_count']
-            if 'file_hash' in result.data:
-                sanitized_data['file_hash'] = result.data['file_hash']
-            if 'error_count' in result.data:
-                sanitized_data['error_count'] = result.data['error_count']
-            if 'warning_count' in result.data:
-                sanitized_data['warning_count'] = result.data['warning_count']
-            if 'record_count' in result.data:
-                sanitized_data['record_count'] = result.data['record_count']
-            
-            self._emit("STEP_END", f"Completed {tool_name}", sanitized_data)
-            
-            # Store result
-            results[tool_name] = result
-            
-            # Part 3: HITL workflow per BRD FR-012
-            # After validation, check for errors and trigger HITL workflow if needed
-            if tool_name == 'ValidateStagedDataTool':
-                violations = result.data.get('violations', [])
-                error_count = result.data.get('error_count', 0)
+            # If errors found, trigger HITL workflow per BRD FR-012
+            if error_count > 0:
+                # Get partner name and quarter from inputs (passed from CLI)
+                partner_name = inputs.get('partner_name', 'Partner')
+                quarter = inputs.get('quarter', 'Q1')
+                year = inputs.get('year', str(datetime.now().year))
                 
-                # If errors found, trigger HITL workflow per BRD FR-012
-                if error_count > 0:
-                    # Get partner name and quarter from inputs (passed from CLI)
-                    partner_name = inputs.get('partner_name', 'Partner')
-                    quarter = inputs.get('quarter', 'Q1')
-                    year = inputs.get('year', str(datetime.now().year))
-                    
-                    # Generate error report per BRD FR-012
-                    # Use Excel format for better user experience (color-coding, comments, action guidance)
-                    error_report_path = self.evidence_dir / "outputs" / "partner_error_report.xlsx"
-                    error_report_path.parent.mkdir(parents=True, exist_ok=True)
-                    
-                    self._emit("STEP_START", "Generating partner error report", {
-                        "tool": "GeneratePartnerErrorReportTool"
-                    })
-                    
-                    error_report_result = self.error_report_tool(
-                        staged_dataframe=staged_dataframe,
-                        violations=violations,
-                        output_path=error_report_path
-                    )
-                    
-                    self._emit("STEP_END", "Completed GeneratePartnerErrorReportTool", {
-                        "tool": "GeneratePartnerErrorReportTool",
-                        "ok": error_report_result.ok,
-                        "error_row_count": error_report_result.data.get('error_row_count', 0)
-                    })
-                    
-                    results['GeneratePartnerErrorReportTool'] = error_report_result
-                    
-                    # Generate email template per BRD FR-012
-                    self._emit("STEP_START", "Generating partner email", {
-                        "tool": "GeneratePartnerEmailTool"
-                    })
-                    
-                    email_result = self.email_tool(
-                        error_report_path=error_report_path,
-                        violations=violations,
-                        partner_name=partner_name,
-                        quarter=quarter,
-                        year=year
-                    )
-                    
-                    self._emit("STEP_END", "Completed GeneratePartnerEmailTool", {
-                        "tool": "GeneratePartnerEmailTool",
-                        "ok": email_result.ok
-                    })
-                    
-                    results['GeneratePartnerEmailTool'] = email_result
-                    
-                    # Stage 1: Upload review worksheet to internal SharePoint/Dataverse
-                    # For the POC, this uses a local "sharepoint_simulation" directory
-                    # under the evidence bundle to avoid external dependencies.
-                    self._emit("STEP_START", "Uploading review worksheet to internal SharePoint (simulated)", {
+                # Get staged_dataframe from context
+                staged_dataframe = context.get('staged_dataframe')
+                
+                # Collect aggregates from partner data for WSAC submission per BRD FR-004
+                self._emit("STEP_START", "Collecting WSAC aggregates from partner data", {
+                    "tool": "CollectWSACAggregatesTool"
+                })
+                
+                wsac_result = self.wsac_aggregates_tool(
+                    partner_dataframe=staged_dataframe,
+                    quarter=quarter,
+                    year=int(year) if year.isdigit() else datetime.now().year,
+                    wraparound_funding=None  # Will be collected via staff input if needed
+                )
+                
+                self._emit("STEP_END", "Completed CollectWSACAggregatesTool", {
+                    "tool": "CollectWSACAggregatesTool",
+                    "ok": wsac_result.ok,
+                    "total_participants": wsac_result.data.get('aggregates', {}).get('total_participants', 0) if wsac_result.ok else 0
+                })
+                
+                aggregates = wsac_result.data.get('aggregates') if wsac_result.ok else None
+                
+                # Generate error report per BRD FR-012
+                # Use Excel format for better user experience (color-coding, comments, action guidance)
+                error_report_path = self.evidence_dir / "outputs" / "partner_error_report.xlsx"
+                error_report_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                self._emit("STEP_START", "Generating partner error report", {
+                    "tool": "GeneratePartnerErrorReportTool"
+                })
+                
+                error_report_result = self.error_report_tool(
+                    staged_dataframe=staged_dataframe,
+                    violations=violations,
+                    aggregates=aggregates,  # Pass aggregates to include in report
+                    output_path=error_report_path
+                )
+                
+                self._emit("STEP_END", "Completed GeneratePartnerErrorReportTool", {
+                    "tool": "GeneratePartnerErrorReportTool",
+                    "ok": error_report_result.ok,
+                    "error_row_count": error_report_result.data.get('error_row_count', 0)
+                })
+                
+                results['GeneratePartnerErrorReportTool'] = error_report_result
+                
+                # Generate email template per BRD FR-012
+                self._emit("STEP_START", "Generating partner email", {
+                    "tool": "GeneratePartnerEmailTool"
+                })
+                
+                email_result = self.email_tool(
+                    error_report_path=error_report_path,
+                    violations=violations,
+                    partner_name=partner_name,
+                    quarter=quarter,
+                    year=year
+                )
+                
+                self._emit("STEP_END", "Completed GeneratePartnerEmailTool", {
+                    "tool": "GeneratePartnerEmailTool",
+                    "ok": email_result.ok
+                })
+                
+                results['GeneratePartnerEmailTool'] = email_result
+                
+                # Stage 1: Upload review worksheet to internal SharePoint/Dataverse
+                # For the POC, this uses a local "sharepoint_simulation" directory
+                # under the evidence bundle to avoid external dependencies.
+                self._emit("STEP_START", "Uploading review worksheet to internal SharePoint (simulated)", {
+                    "tool": "UploadSharePointTool",
+                    "stage": "internal"
+                })
+
+                internal_upload_result = self.upload_sharepoint_tool(
+                    file_path=error_report_path,
+                    folder_type="internal",
+                    partner_name=partner_name,
+                    quarter=quarter,
+                    run_id=self.run_id,
+                    evidence_dir=self.evidence_dir,
+                    demo_mode=True,  # PRODUCTION: set to False and use real SharePointClient
+                )
+
+                self._emit("STEP_END", "Completed UploadSharePointTool (internal)", {
+                    "tool": "UploadSharePointTool",
+                    "ok": internal_upload_result.ok,
+                    "stage": "internal",
+                    "sharepoint_url": internal_upload_result.data.get("sharepoint_url"),
+                })
+
+                results['UploadSharePointTool_internal'] = internal_upload_result
+
+                # Request staff approval per BRD FR-012
+                # Categorize violations using precise pattern matching to avoid double-counting
+                error_summary = {
+                    'total_errors': error_count,
+                    'total_warnings': result.data.get('warning_count', 0),
+                    'required_field': len([v for v in violations if self._categorize_violation(v) == 'required_field']),
+                    'active_past_graduation': len([v for v in violations if self._categorize_violation(v) == 'active_past_graduation']),
+                    'zip_code_format': len([v for v in violations if self._categorize_violation(v) == 'zip_code_format']),
+                    'date_validation': len([v for v in violations if self._categorize_violation(v) == 'date_validation']),
+                    'address_validation': len([v for v in violations if self._categorize_violation(v) == 'address_validation']),
+                    'status_validation': len([v for v in violations if self._categorize_violation(v) == 'status_validation']),
+                    'employment_validation': len([v for v in violations if self._categorize_violation(v) == 'employment_validation']),
+                    'other': len([v for v in violations if self._categorize_violation(v) == 'other']),
+                }
+                
+                self._emit("STEP_START", "Requesting staff approval", {
+                    "tool": "RequestStaffApprovalTool"
+                })
+                
+                approval_result = self.approval_tool(
+                    email_content=email_result.data.get('email_content', ''),
+                    error_report_path=error_report_path,
+                    internal_report_url=internal_upload_result.data.get('sharepoint_url'),
+                    error_summary=error_summary,
+                    aggregates=aggregates,  # Pass aggregates for staff review
+                    partner_name=partner_name,
+                    quarter=quarter,
+                    year=year,
+                    demo_mode=True,
+                    approval_recipients=None,  # PRODUCTION: pass Teams channel/user group here
+                )
+                
+                self._emit("STEP_END", "Completed RequestStaffApprovalTool", {
+                    "tool": "RequestStaffApprovalTool",
+                    "ok": approval_result.ok,
+                    "approval_status": approval_result.data.get('approval_status')
+                })
+                
+                results['RequestStaffApprovalTool'] = approval_result
+                
+                # If approved, upload partner-facing copy and create secure link per BRD FR-013
+                if approval_result.ok and approval_result.data.get('approval_status') == 'approved':
+                    # Stage 2: Upload report to partner-accessible location
+                    # For the POC, this is also a simulated SharePoint directory.
+                    self._emit("STEP_START", "Uploading report to partner-accessible SharePoint (simulated)", {
                         "tool": "UploadSharePointTool",
-                        "stage": "internal"
+                        "stage": "partner"
                     })
 
-                    internal_upload_result = self.upload_sharepoint_tool(
+                    partner_upload_result = self.upload_sharepoint_tool(
                         file_path=error_report_path,
-                        folder_type="internal",
+                        folder_type="partner",
                         partner_name=partner_name,
                         quarter=quarter,
                         run_id=self.run_id,
@@ -332,176 +403,106 @@ class SimpleIntakeAgent(BaseAgent):
                         demo_mode=True,  # PRODUCTION: set to False and use real SharePointClient
                     )
 
-                    self._emit("STEP_END", "Completed UploadSharePointTool (internal)", {
+                    self._emit("STEP_END", "Completed UploadSharePointTool (partner)", {
                         "tool": "UploadSharePointTool",
-                        "ok": internal_upload_result.ok,
-                        "stage": "internal",
-                        "sharepoint_url": internal_upload_result.data.get("sharepoint_url"),
+                        "ok": partner_upload_result.ok,
+                        "stage": "partner",
+                        "sharepoint_url": partner_upload_result.data.get("sharepoint_url"),
                     })
 
-                    results['UploadSharePointTool_internal'] = internal_upload_result
+                    results['UploadSharePointTool_partner'] = partner_upload_result
 
-                    # Request staff approval per BRD FR-012
-                    # Categorize violations using precise pattern matching to avoid double-counting
-                    error_summary = {
-                        'total_errors': error_count,
-                        'total_warnings': result.data.get('warning_count', 0),
-                        'required_field': len([v for v in violations if self._categorize_violation(v) == 'required_field']),
-                        'active_past_graduation': len([v for v in violations if self._categorize_violation(v) == 'active_past_graduation']),
-                        'zip_code_format': len([v for v in violations if self._categorize_violation(v) == 'zip_code_format']),
-                        'date_validation': len([v for v in violations if self._categorize_violation(v) == 'date_validation']),
-                        'address_validation': len([v for v in violations if self._categorize_violation(v) == 'address_validation']),
-                        'status_validation': len([v for v in violations if self._categorize_violation(v) == 'status_validation']),
-                        'employment_validation': len([v for v in violations if self._categorize_violation(v) == 'employment_validation']),
-                        'other': len([v for v in violations if self._categorize_violation(v) == 'other']),
-                    }
-                    
-                    self._emit("STEP_START", "Requesting staff approval", {
-                        "tool": "RequestStaffApprovalTool"
+                    self._emit("STEP_START", "Creating secure link", {
+                        "tool": "CreateSecureLinkTool"
                     })
                     
-                    approval_result = self.approval_tool(
-                        email_content=email_result.data.get('email_content', ''),
+                    secure_link_result = self.secure_link_tool(
                         error_report_path=error_report_path,
-                        internal_report_url=internal_upload_result.data.get('sharepoint_url'),
-                        error_summary=error_summary,
-                        partner_name=partner_name,
-                        quarter=quarter,
-                        demo_mode=True,
-                        approval_recipients=None,  # PRODUCTION: pass Teams channel/user group here
+                        evidence_dir=self.evidence_dir,
+                        run_id=self.run_id,
+                        # In the POC, this is a file:// URL from UploadSharePointTool.
+                        # PRODUCTION: this would be a real SharePoint URL that
+                        # SecureLinkGenerator wraps with code-based or AAD-auth link.
+                        # BRD FR-013: Secure link is generated only after staff approval.
+                        sharepoint_url=partner_upload_result.data.get("sharepoint_url"),
                     )
                     
-                    self._emit("STEP_END", "Completed RequestStaffApprovalTool", {
-                        "tool": "RequestStaffApprovalTool",
-                        "ok": approval_result.ok,
-                        "approval_status": approval_result.data.get('approval_status')
+                    self._emit("STEP_END", "Completed CreateSecureLinkTool", {
+                        "tool": "CreateSecureLinkTool",
+                        "ok": secure_link_result.ok
                     })
                     
-                    results['RequestStaffApprovalTool'] = approval_result
+                    results['CreateSecureLinkTool'] = secure_link_result
+
+                    # After secure link is created, regenerate partner email so that
+                    # the message sent to the partner contains the actual secure link
+                    # and access code instead of placeholders.
+                    # BRD FR-012 / FR-013: Email with secure link is only prepared
+                    # after staff approval and secure link generation.
+                    secure_link_url = secure_link_result.data.get("secure_link_url")
+                    access_code = secure_link_result.data.get("access_code")
+
+                    self._emit("STEP_START", "Regenerating partner email with secure link", {
+                        "tool": "GeneratePartnerEmailTool",
+                        "stage": "post_approval"
+                    })
+
+                    final_email_result = self.email_tool(
+                        error_report_path=error_report_path,
+                        violations=violations,
+                        partner_name=partner_name,
+                        quarter=quarter,
+                        year=year,
+                        secure_link_url=secure_link_url,
+                        access_code=access_code,
+                    )
+
+                    self._emit("STEP_END", "Completed GeneratePartnerEmailTool (post_approval)", {
+                        "tool": "GeneratePartnerEmailTool",
+                        "ok": final_email_result.ok,
+                        "stage": "post_approval"
+                    })
+
+                    # Keep both initial (staff preview) and final (partner-facing) emails
+                    # in results; the final result is the one written to evidence outputs.
+                    # BRD FR-011 / FR-012: Evidence bundle must capture the actual
+                    # partner communication content.
+                    results['GeneratePartnerEmailTool_initial'] = email_result
+                    results['GeneratePartnerEmailTool'] = final_email_result
+
+                    # TODO: Send email to partner (demo: just log it)
+                    # PRODUCTION: Use email service API to send email
+                    print(f"\n[DEMO] Email would be sent to partner with secure link: {secure_link_url}")
+                    print(f"[DEMO] Access code: {access_code}")
                     
-                    # If approved, upload partner-facing copy and create secure link per BRD FR-013
-                    if approval_result.ok and approval_result.data.get('approval_status') == 'approved':
-                        # Stage 2: Upload report to partner-accessible location
-                        # For the POC, this is also a simulated SharePoint directory.
-                        self._emit("STEP_START", "Uploading report to partner-accessible SharePoint (simulated)", {
-                            "tool": "UploadSharePointTool",
-                            "stage": "partner"
-                        })
-
-                        partner_upload_result = self.upload_sharepoint_tool(
-                            file_path=error_report_path,
-                            folder_type="partner",
-                            partner_name=partner_name,
-                            quarter=quarter,
-                            run_id=self.run_id,
-                            evidence_dir=self.evidence_dir,
-                            demo_mode=True,  # PRODUCTION: set to False and use real SharePointClient
-                        )
-
-                        self._emit("STEP_END", "Completed UploadSharePointTool (partner)", {
-                            "tool": "UploadSharePointTool",
-                            "ok": partner_upload_result.ok,
-                            "stage": "partner",
-                            "sharepoint_url": partner_upload_result.data.get("sharepoint_url"),
-                        })
-
-                        results['UploadSharePointTool_partner'] = partner_upload_result
-
-                        self._emit("STEP_START", "Creating secure link", {
-                            "tool": "CreateSecureLinkTool"
-                        })
-                        
-                        secure_link_result = self.secure_link_tool(
-                            error_report_path=error_report_path,
-                            evidence_dir=self.evidence_dir,
-                            run_id=self.run_id,
-                            # In the POC, this is a file:// URL from UploadSharePointTool.
-                            # PRODUCTION: this would be a real SharePoint URL that
-                            # SecureLinkGenerator wraps with code-based or AAD-auth link.
-                            # BRD FR-013: Secure link is generated only after staff approval.
-                            sharepoint_url=partner_upload_result.data.get("sharepoint_url"),
-                        )
-                        
-                        self._emit("STEP_END", "Completed CreateSecureLinkTool", {
-                            "tool": "CreateSecureLinkTool",
-                            "ok": secure_link_result.ok
-                        })
-                        
-                        results['CreateSecureLinkTool'] = secure_link_result
-
-                        # After secure link is created, regenerate partner email so that
-                        # the message sent to the partner contains the actual secure link
-                        # and access code instead of placeholders.
-                        # BRD FR-012 / FR-013: Email with secure link is only prepared
-                        # after staff approval and secure link generation.
-                        secure_link_url = secure_link_result.data.get("secure_link_url")
-                        access_code = secure_link_result.data.get("access_code")
-
-                        self._emit("STEP_START", "Regenerating partner email with secure link", {
-                            "tool": "GeneratePartnerEmailTool",
-                            "stage": "post_approval"
-                        })
-
-                        final_email_result = self.email_tool(
-                            error_report_path=error_report_path,
-                            violations=violations,
-                            partner_name=partner_name,
-                            quarter=quarter,
-                            year=year,
-                            secure_link_url=secure_link_url,
-                            access_code=access_code,
-                        )
-
-                        self._emit("STEP_END", "Completed GeneratePartnerEmailTool (post_approval)", {
-                            "tool": "GeneratePartnerEmailTool",
-                            "ok": final_email_result.ok,
-                            "stage": "post_approval"
-                        })
-
-                        # Keep both initial (staff preview) and final (partner-facing) emails
-                        # in results; the final result is the one written to evidence outputs.
-                        # BRD FR-011 / FR-012: Evidence bundle must capture the actual
-                        # partner communication content.
-                        results['GeneratePartnerEmailTool_initial'] = email_result
-                        results['GeneratePartnerEmailTool'] = final_email_result
-
-                        # TODO: Send email to partner (demo: just log it)
-                        # PRODUCTION: Use email service API to send email
-                        print(f"\n[DEMO] Email would be sent to partner with secure link: {secure_link_url}")
-                        print(f"[DEMO] Access code: {access_code}")
-                        
-                        # Store resume state per BRD FR-012
-                        resume_state = {
-                            "run_id": self.run_id,
-                            "original_file_path": str(inputs.get('file_path')),
-                            "validation_violations": violations,
-                            "secure_link_code": secure_link_result.data.get('access_code'),
-                            "secure_link_url": secure_link_result.data.get('secure_link_url'),
-                            "halted_at": "ValidateStagedDataTool",
-                            "timestamp": datetime.utcnow().isoformat() + "Z",
-                            "partner_name": partner_name,
-                            "quarter": quarter,
-                            "year": year
-                        }
-                        
-                        resume_state_path = self.evidence_dir / "resume_state.json"
-                        with open(resume_state_path, 'w', encoding='utf-8') as f:
-                            json.dump(resume_state, f, indent=2)
-                        
-                        # Halt execution and wait for partner corrections per BRD FR-012
-                        results['_halted'] = True
-                        results['_halt_reason'] = "Validation errors found - waiting for partner corrections"
-                        return results
+                    # Store resume state per BRD FR-012
+                    resume_state = {
+                        "run_id": self.run_id,
+                        "original_file_path": str(inputs.get('file_path')),
+                        "validation_violations": violations,
+                        "secure_link_code": secure_link_result.data.get('access_code'),
+                        "secure_link_url": secure_link_result.data.get('secure_link_url'),
+                        "halted_at": "ValidateStagedDataTool",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "partner_name": partner_name,
+                        "quarter": quarter,
+                        "year": year
+                    }
                     
-                    # If rejected, halt execution with rejection reason per BRD FR-012
-                    else:
-                        results['_halted'] = True
-                        results['_halt_reason'] = f"Staff approval rejected: {approval_result.data.get('staff_comments', 'No reason provided')}"
-                        return results
-            
-            # Stop on blockers per PRD-TRD Section 5.1
-            if not result.ok or result.blockers:
-                break
+                    resume_state_path = self.evidence_dir / "resume_state.json"
+                    with open(resume_state_path, 'w', encoding='utf-8') as f:
+                        json.dump(resume_state, f, indent=2)
+                    
+                    # Halt execution and wait for partner corrections per BRD FR-012
+                    results['_halted'] = True
+                    results['_halt_reason'] = "Validation errors found - waiting for partner corrections"
+                    return results
+                
+                # If rejected, halt execution with rejection reason per BRD FR-012
+                else:
+                    results['_halted'] = True
+                    results['_halt_reason'] = f"Staff approval rejected: {approval_result.data.get('staff_comments', 'No reason provided')}"
+                    return results
         
         return results
     
@@ -600,9 +601,34 @@ class SimpleIntakeAgent(BaseAgent):
             "warning_count": validate_result.data.get('warning_count', 0)
         })
         
+        # Re-collect aggregates from corrected data per BRD FR-004
+        partner_name = resume_state.get('partner_name', 'Partner')
+        quarter = resume_state.get('quarter', 'Q1')
+        year = resume_state.get('year', str(datetime.now().year))
+        
+        self._emit("STEP_START", "Re-collecting WSAC aggregates from corrected data", {
+            "tool": "CollectWSACAggregatesTool"
+        })
+        
+        wsac_result = self.wsac_aggregates_tool(
+            partner_dataframe=staged_dataframe,
+            quarter=quarter,
+            year=int(year) if year.isdigit() else datetime.now().year,
+            wraparound_funding=None  # Or load from previous run if needed
+        )
+        
+        self._emit("STEP_END", "Completed CollectWSACAggregatesTool (resume)", {
+            "tool": "CollectWSACAggregatesTool",
+            "ok": wsac_result.ok,
+            "total_participants": wsac_result.data.get('aggregates', {}).get('total_participants', 0) if wsac_result.ok else 0
+        })
+        
+        aggregates = wsac_result.data.get('aggregates') if wsac_result.ok else None
+        
         results = {
             'IngestPartnerFileTool': ingest_result,
-            'ValidateStagedDataTool': validate_result
+            'ValidateStagedDataTool': validate_result,
+            'CollectWSACAggregatesTool': wsac_result
         }
         
         # If validation passes, continue to canonicalization
@@ -647,6 +673,7 @@ class SimpleIntakeAgent(BaseAgent):
             error_report_result = self.error_report_tool(
                 staged_dataframe=staged_dataframe,
                 violations=violations,
+                aggregates=aggregates,  # Pass updated aggregates to error report
                 output_path=error_report_path
             )
             

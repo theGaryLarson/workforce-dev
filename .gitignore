@@ -21,6 +21,9 @@ dist/
 *.egg-info/
 .eggs/
 
+# Dependency files
+requirements.txt  # Generated artifact, use requirements.in and requirements.lock instead
+
 # IDE
 .vscode/
 .idea/
@@ -70,8 +73,9 @@ agentic_systems/docs/Example Quarterly Data Report.mock_validated.xlsx
 agentic_systems/docs/version2 1.py
 agentic_systems/docs/version2_3.py
 
-# Evidence bundles (exclude run outputs, keep directory structure)
+# Evidence bundles (exclude run outputs, keep directory structure with .gitkeep)
 agentic_systems/core/audit/runs/*
+!agentic_systems/core/audit/runs/.gitkeep
 
 # Coverage files
 .coverage

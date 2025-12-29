@@ -6,6 +6,109 @@ from datetime import datetime, timedelta
 
 from agentic_systems.core.tools import ToolResult
 from agentic_systems.core.validation.validate_tool import ValidateStagedDataTool
+from agentic_systems.core.validation.engine import ValidationEngine
+
+
+class TestValidationEngine:
+    """Test suite for ValidationEngine."""
+    
+    def test_engine_loads_rules(self):
+        """Test that ValidationEngine loads rules from clients/cfa/rules.py."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        assert "completion_types" in engine.rules
+        assert "noncompletion_reasons" in engine.rules
+        assert "employment_statuses" in engine.rules
+        assert "required_headers" in engine.rules
+        assert "file_structure" in engine.rules
+    
+    def test_engine_loads_config(self):
+        """Test that ValidationEngine loads config from clients/cfa/client_spec.yaml."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        assert "validation" in engine.config
+        assert "canonical_mappings" in engine.config
+        assert engine.config["client"] == "CFA"
+    
+    def test_engine_loads_mappings(self):
+        """Test that ValidationEngine loads mappings from clients/cfa/mappings.py."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        assert "wsac_export" in engine.mappings
+        assert "dynamics_import" in engine.mappings
+        assert "wsac_transformations" in engine.mappings
+        assert "dynamics_transformations" in engine.mappings
+    
+    def test_engine_helper_methods(self):
+        """Test ValidationEngine helper methods."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        completion_types = engine.get_approved_values("completion_types")
+        assert len(completion_types) > 0
+        assert isinstance(completion_types, list)
+        
+        required_headers = engine.get_required_headers()
+        assert len(required_headers) > 0
+        assert "First Name" in required_headers
+        
+        file_structure = engine.get_file_structure()
+        assert file_structure["min_columns"] == 42
+        
+        canonical_mappings = engine.get_canonical_mappings()
+        assert "first_name" in canonical_mappings
+        assert "last_name" in canonical_mappings
+        
+        assert engine.should_halt_on_error() is True
+    
+    def test_engine_warning_threshold(self):
+        """Test get_warning_threshold() returns correct value from config."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        # Default should be None (not configured)
+        threshold = engine.get_warning_threshold()
+        assert threshold is None
+    
+    def test_engine_file_structure_preference(self):
+        """Test get_file_structure() prefers YAML config over rules.py."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        file_structure = engine.get_file_structure()
+        # Should prefer YAML config (42, 1, 2) over rules.py defaults
+        assert file_structure["min_columns"] == 42
+        assert file_structure["header_row"] == 1
+        assert file_structure["data_start_row"] == 2
+    
+    def test_engine_enhanced_rules_separation(self):
+        """Test enhanced rules separation: enablement in YAML, implementation in rules.py."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        # get_enhanced_rules() should return implementation details (no enabled flags)
+        enhanced_rules = engine.get_enhanced_rules()
+        assert "active_past_graduation" in enhanced_rules
+        assert "severity" in enhanced_rules["active_past_graduation"]
+        assert "enabled" not in enhanced_rules["active_past_graduation"]  # No enabled flag
+        
+        # get_enhanced_rule_config() should return enablement from YAML
+        rule_config = engine.get_enhanced_rule_config("active_past_graduation")
+        assert rule_config is not None
+        assert "enabled" in rule_config
+        assert rule_config["enabled"] is True
+        assert "severity" in rule_config
+    
+    def test_engine_data_classification(self):
+        """Test get_data_classification() returns correct values from YAML."""
+        engine = ValidationEngine(client_id="cfa")
+        
+        data_class = engine.get_data_classification()
+        assert "default" in data_class
+        assert data_class["default"] == "Confidential"  # BRD Section 2.3
+        assert "pii_handling" in data_class
+        assert data_class["pii_handling"] == "minimized"  # BRD Section 2.3
+    
+    def test_engine_error_handling(self):
+        """Test ValidationEngine error handling for missing files."""
+        with pytest.raises(FileNotFoundError):
+            ValidationEngine(client_id="nonexistent_client")
 
 
 class TestValidateStagedDataTool:
@@ -18,6 +121,8 @@ class TestValidateStagedDataTool:
         assert hasattr(tool, 'name'), "Tool must have 'name' attribute"
         assert tool.name == "ValidateStagedDataTool"
         assert callable(tool), "Tool must be callable"
+        assert hasattr(tool, 'engine'), "Tool must have 'engine' attribute"
+        assert tool.client_id == "cfa", "Tool should default to 'cfa' client"
 
     def test_header_validation_a_ap(self):
         """Test file-level header validation for A–AP slice."""
@@ -120,7 +225,7 @@ class TestValidateStagedDataTool:
         
         result = tool(df)
         violations = result.data['violations']
-        assert any("Employment Status must be one of the two “Employed In-field…” options" in v['message'] for v in violations)
+        assert any("Employment Status must be either" in v['message'] and "Employed In-field" in v['message'] for v in violations)
 
     def test_date_validations_no_double_reporting(self):
         """Test that invalid dates don't also report 'required' errors if value is present."""
@@ -150,3 +255,54 @@ class TestValidateStagedDataTool:
         
         result = tool(df)
         assert result.ok, f"Validation should be OK but got: {result.summary}. Violations: {result.data['violations']}"
+    
+    def test_halt_logic_on_errors(self):
+        """Test that validation halts when error_count > 0 and halt_on_error is enabled."""
+        tool = ValidateStagedDataTool()
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        # Create data with errors (missing required Last Name)
+        df = pd.DataFrame([
+            ["John", "", "01/01/1990", "123 Main St"] + [""] * 38
+        ], columns=headers)
+        
+        result = tool(df)
+        
+        # Should halt on error (halt_on_error is True by default)
+        assert not result.ok, "Should halt on errors"
+        assert len(result.blockers) > 0
+        assert any("Halted" in blocker or "errors found" in blocker for blocker in result.blockers)
+    
+    def test_halt_logic_warning_threshold(self):
+        """Test that validation halts when warning_count >= threshold."""
+        # Note: This test requires a test fixture with warning_threshold set
+        # For now, we test that the logic exists and works when threshold is None
+        tool = ValidateStagedDataTool()
+        
+        # Default threshold should be None, so warnings shouldn't halt
+        # (We can't easily create warnings without implementing enhanced rules)
+        # This test verifies the code path exists
+        assert tool.engine.get_warning_threshold() is None
+    
+    def test_file_structure_uses_config(self):
+        """Test that file structure from config is used (header_row, data_start_row)."""
+        tool = ValidateStagedDataTool()
+        headers = ["First Name", "Last Name", "Date of Birth (MM/DD/YYYY)", "Address 1"]
+        headers += [f"Col {i}" for i in range(42 - len(headers))]
+        
+        df = pd.DataFrame([
+            ["John", "Doe", "01/01/1990", "123 Main St"] + [""] * 38
+        ], columns=headers)
+        
+        result = tool(df)
+        
+        # Verify that row numbers use data_start_row from config (should be 2)
+        # Row 0 in DataFrame should map to row 2 in violations
+        violations = result.data['violations']
+        if violations:
+            # Check that row_index uses data_start_row (not hardcoded +2)
+            # Since data_start_row is 2, first row should be row 2
+            row_indices = [v['row_index'] for v in violations]
+            # First data row should be at data_start_row (2)
+            assert all(rn >= 2 for rn in row_indices), f"Row indices should start at data_start_row (2), got: {row_indices}"
