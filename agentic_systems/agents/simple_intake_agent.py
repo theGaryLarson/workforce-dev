@@ -267,8 +267,7 @@ class SimpleIntakeAgent(BaseAgent):
                 
                 self._emit("STEP_END", "Completed CollectWSACAggregatesTool", {
                     "tool": "CollectWSACAggregatesTool",
-                    "ok": wsac_result.ok,
-                    "total_participants": wsac_result.data.get('aggregates', {}).get('total_participants', 0) if wsac_result.ok else 0
+                    **self._sanitize_tool_result(wsac_result)
                 })
                 
                 aggregates = wsac_result.data.get('aggregates') if wsac_result.ok else None
@@ -291,8 +290,7 @@ class SimpleIntakeAgent(BaseAgent):
                 
                 self._emit("STEP_END", "Completed GeneratePartnerErrorReportTool", {
                     "tool": "GeneratePartnerErrorReportTool",
-                    "ok": error_report_result.ok,
-                    "error_row_count": error_report_result.data.get('error_row_count', 0)
+                    **self._sanitize_tool_result(error_report_result)
                 })
                 
                 results['GeneratePartnerErrorReportTool'] = error_report_result
@@ -312,7 +310,7 @@ class SimpleIntakeAgent(BaseAgent):
                 
                 self._emit("STEP_END", "Completed GeneratePartnerEmailTool", {
                     "tool": "GeneratePartnerEmailTool",
-                    "ok": email_result.ok
+                    **self._sanitize_tool_result(email_result)
                 })
                 
                 results['GeneratePartnerEmailTool'] = email_result
@@ -337,9 +335,9 @@ class SimpleIntakeAgent(BaseAgent):
 
                 self._emit("STEP_END", "Completed UploadSharePointTool (internal)", {
                     "tool": "UploadSharePointTool",
-                    "ok": internal_upload_result.ok,
                     "stage": "internal",
                     "sharepoint_url": internal_upload_result.data.get("sharepoint_url"),
+                    **self._sanitize_tool_result(internal_upload_result)
                 })
 
                 results['UploadSharePointTool_internal'] = internal_upload_result
@@ -376,10 +374,11 @@ class SimpleIntakeAgent(BaseAgent):
                     approval_recipients=None,  # PRODUCTION: pass Teams channel/user group here
                 )
                 
+                sanitized_approval = self._sanitize_tool_result(approval_result)
+                sanitized_approval["approval_status"] = approval_result.data.get('approval_status')
                 self._emit("STEP_END", "Completed RequestStaffApprovalTool", {
                     "tool": "RequestStaffApprovalTool",
-                    "ok": approval_result.ok,
-                    "approval_status": approval_result.data.get('approval_status')
+                    **sanitized_approval
                 })
                 
                 results['RequestStaffApprovalTool'] = approval_result
@@ -405,9 +404,9 @@ class SimpleIntakeAgent(BaseAgent):
 
                     self._emit("STEP_END", "Completed UploadSharePointTool (partner)", {
                         "tool": "UploadSharePointTool",
-                        "ok": partner_upload_result.ok,
                         "stage": "partner",
                         "sharepoint_url": partner_upload_result.data.get("sharepoint_url"),
+                        **self._sanitize_tool_result(partner_upload_result)
                     })
 
                     results['UploadSharePointTool_partner'] = partner_upload_result
@@ -429,7 +428,7 @@ class SimpleIntakeAgent(BaseAgent):
                     
                     self._emit("STEP_END", "Completed CreateSecureLinkTool", {
                         "tool": "CreateSecureLinkTool",
-                        "ok": secure_link_result.ok
+                        **self._sanitize_tool_result(secure_link_result)
                     })
                     
                     results['CreateSecureLinkTool'] = secure_link_result
@@ -459,8 +458,8 @@ class SimpleIntakeAgent(BaseAgent):
 
                     self._emit("STEP_END", "Completed GeneratePartnerEmailTool (post_approval)", {
                         "tool": "GeneratePartnerEmailTool",
-                        "ok": final_email_result.ok,
-                        "stage": "post_approval"
+                        "stage": "post_approval",
+                        **self._sanitize_tool_result(final_email_result)
                     })
 
                     # Keep both initial (staff preview) and final (partner-facing) emails
@@ -475,7 +474,9 @@ class SimpleIntakeAgent(BaseAgent):
                     print(f"\n[DEMO] Email would be sent to partner with secure link: {secure_link_url}")
                     print(f"[DEMO] Access code: {access_code}")
                     
-                    # Store resume state per BRD FR-012
+                    # Store resume state per BRD FR-012 and orchestrator plan
+                    # Per orchestrator plan: Include halt_reason, current_phase, partner_error_report_path
+                    error_report_path = self.evidence_dir / "outputs" / "partner_error_report.xlsx"
                     resume_state = {
                         "run_id": self.run_id,
                         "original_file_path": str(inputs.get('file_path')),
@@ -486,7 +487,13 @@ class SimpleIntakeAgent(BaseAgent):
                         "timestamp": datetime.utcnow().isoformat() + "Z",
                         "partner_name": partner_name,
                         "quarter": quarter,
-                        "year": year
+                        "year": year,
+                        # Orchestrator fields per orchestrator plan
+                        "halt_reason": "Validation errors - awaiting partner correction",
+                        "current_phase": "AWAITING_PARTNER",
+                        "partner_error_report_path": str(error_report_path.resolve()),
+                        "last_corrected_file_path": None,
+                        "resume_attempt_count": 0
                     }
                     
                     resume_state_path = self.evidence_dir / "resume_state.json"
@@ -563,6 +570,12 @@ class SimpleIntakeAgent(BaseAgent):
         with open(resume_state_path, 'r', encoding='utf-8') as f:
             resume_state = json.load(f)
         
+        corrected_file_mtime = None
+        try:
+            corrected_file_mtime = corrected_file_path.stat().st_mtime
+        except OSError:
+            corrected_file_mtime = None
+
         # Re-run ingestion on corrected file
         self._emit("STEP_START", "Re-ingesting corrected file", {
             "tool": "IngestPartnerFileTool",
@@ -628,7 +641,8 @@ class SimpleIntakeAgent(BaseAgent):
         results = {
             'IngestPartnerFileTool': ingest_result,
             'ValidateStagedDataTool': validate_result,
-            'CollectWSACAggregatesTool': wsac_result
+            'CollectWSACAggregatesTool': wsac_result,
+            'validation_errors': violations
         }
         
         # If validation passes, continue to canonicalization
@@ -652,6 +666,15 @@ class SimpleIntakeAgent(BaseAgent):
             resume_state['resumed_at'] = datetime.utcnow().isoformat() + "Z"
             resume_state['corrected_file_path'] = str(corrected_file_path)
             resume_state['validation_passed'] = True
+            resume_state['validation_violations'] = violations
+            # Update orchestrator fields
+            resume_state['halt_reason'] = None
+            resume_state['current_phase'] = "COMPLETED"
+            resume_state['last_corrected_file_path'] = str(corrected_file_path)
+            if corrected_file_mtime:
+                resume_state['last_corrected_file_mtime'] = corrected_file_mtime
+            # Increment resume attempt count
+            resume_state['resume_attempt_count'] = resume_state.get('resume_attempt_count', 0) + 1
             
             with open(resume_state_path, 'w', encoding='utf-8') as f:
                 json.dump(resume_state, f, indent=2)
@@ -690,6 +713,15 @@ class SimpleIntakeAgent(BaseAgent):
             resume_state['corrected_file_path'] = str(corrected_file_path)
             resume_state['validation_passed'] = False
             resume_state['validation_violations'] = violations
+            # Update orchestrator fields
+            resume_state['halt_reason'] = f"Validation still has {error_count} errors - partner corrections incomplete"
+            resume_state['current_phase'] = "AWAITING_PARTNER"
+            resume_state['partner_error_report_path'] = str(error_report_path.resolve())
+            resume_state['last_corrected_file_path'] = str(corrected_file_path)
+            if corrected_file_mtime:
+                resume_state['last_corrected_file_mtime'] = corrected_file_mtime
+            # Increment resume attempt count
+            resume_state['resume_attempt_count'] = resume_state.get('resume_attempt_count', 0) + 1
             
             with open(resume_state_path, 'w', encoding='utf-8') as f:
                 json.dump(resume_state, f, indent=2)

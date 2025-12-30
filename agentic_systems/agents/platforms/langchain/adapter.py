@@ -117,7 +117,7 @@ class LangChainAdapter:
         # Check for OpenAI API key
         openai_key = os.getenv("OPENAI_API_KEY")
         if openai_key:
-            model = model_name or os.getenv("OPENAI_MODEL", "gpt-4")
+            model = model_name or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
             return ChatOpenAI(model=model, temperature=0)
         
         # Check for Anthropic API key
