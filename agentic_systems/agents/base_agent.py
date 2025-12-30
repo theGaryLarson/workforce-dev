@@ -92,6 +92,14 @@ class BaseAgent(ABC):
             if key in result.data:
                 sanitized[key] = result.data[key]
         
+        # Extract LLM usage information for evidence tracking per BRD Section 2.3
+        # Tools that use LLMs should report model_used in ToolResult.data
+        # Tools that don't use LLMs won't have this field, so llm_usage will be null
+        if 'model_used' in result.data:
+            sanitized['llm_usage'] = result.data['model_used']
+        else:
+            sanitized['llm_usage'] = None
+        
         return sanitized
 
     def _invoke_tool(self, tool_name: str, tool: Any, tool_args: Dict[str, Any], 
@@ -164,6 +172,29 @@ class BaseAgent(ABC):
             Dictionary with step outcomes
         """
         plan_steps = self.plan(inputs)
+        
+        # #region agent log
+        try:
+            import json
+            import time
+            log_path = r"c:\Users\garyl\repos\cfa-projects\cfa-applied-agentic-ai\.cursor\debug.log"
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps({
+                    "sessionId": "debug-session",
+                    "runId": getattr(self, 'run_id', 'unknown'),
+                    "hypothesisId": "H1",
+                    "location": "base_agent.py:execute:plan_received",
+                    "message": "Received plan steps from plan()",
+                    "data": {
+                        "step_count": len(plan_steps),
+                        "steps": plan_steps
+                    },
+                    "timestamp": int(time.time() * 1000)
+                }) + "\n")
+        except Exception:
+            pass
+        # #endregion
+        
         results = {}
         context = {}  # Execution context (e.g., staged_dataframe)
         
@@ -180,9 +211,13 @@ class BaseAgent(ABC):
             tool_args = self._prepare_tool_args(step, context)
             
             # Get tool instance
-            tool = self.tools.get(tool_name)
-            if not tool:
+            #
+            # IMPORTANT: A tool may be registered with a None value intentionally
+            # (e.g., orchestrator pseudo-tools handled by an overridden _invoke_tool()).
+            # Therefore we check key existence rather than truthiness.
+            if tool_name not in self.tools:
                 raise ValueError(f"Tool '{tool_name}' not found in tools registry")
+            tool = self.tools[tool_name]
             
             # Invoke tool - returns ToolResult with in-memory data for chaining
             result = self._invoke_tool(tool_name, tool, tool_args, context)

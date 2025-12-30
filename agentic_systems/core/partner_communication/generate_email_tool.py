@@ -45,33 +45,44 @@ class GeneratePartnerEmailTool:
                  ANTHROPIC_API_KEY). If LLM unavailable, falls back to raw output.
         """
         self.llm = llm
+        self.model_name = None  # Store model name at initialization for accurate reporting
         if self.llm is None and LLM_AVAILABLE:
-            self.llm = self._get_llm()
+            self.llm, self.model_name = self._get_llm()
+        elif self.llm is not None:
+            # If LLM is provided, try to extract model name from it
+            if hasattr(self.llm, 'model_name'):
+                self.model_name = self.llm.model_name
+            elif hasattr(self.llm, 'model'):
+                self.model_name = self.llm.model
     
-    def _get_llm(self) -> Optional[Any]:
+    def _get_llm(self) -> tuple[Optional[Any], Optional[str]]:
         """Get LLM instance from environment variables.
         
         Returns:
-            LangChain LLM instance or None if unavailable
+            Tuple of (LLM instance or None, model name or None)
+            Model name is captured at initialization time to ensure accurate reporting
+            per BRD Section 2.3 and PRD-TRD Section 3.2.
         """
         if not LLM_AVAILABLE:
-            return None
+            return None, None
         
         import os
         
         # Check for OpenAI API key
         openai_key = os.getenv("OPENAI_API_KEY")
         if openai_key:
-            model = os.getenv("OPENAI_MODEL", "gpt-4")
-            return ChatOpenAI(model=model, temperature=0)
+            model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+            # Store model name at initialization time - this is the actual model used
+            return ChatOpenAI(model=model, temperature=0), model
         
         # Check for Anthropic API key
         anthropic_key = os.getenv("ANTHROPIC_API_KEY")
         if anthropic_key:
             model = os.getenv("ANTHROPIC_MODEL", "claude-3-opus-20240229")
-            return ChatAnthropic(model=model, temperature=0)
+            # Store model name at initialization time - this is the actual model used
+            return ChatAnthropic(model=model, temperature=0), model
         
-        return None
+        return None, None
     
     def _generate_error_summary_with_llm(
         self,
@@ -353,6 +364,17 @@ Return only the summary paragraph text, no greeting or closing."""
 </body>
 </html>"""
         
+        # Track LLM model usage for evidence bundle compliance per BRD Section 2.3 and PRD-TRD Section 3.2
+        # Use stored model_name (captured at initialization) to ensure we report the actual model used,
+        # not just what's currently in the environment variable
+        model_used = self.model_name
+        if not model_used and self.llm:
+            # Fallback: Try to extract from LLM instance if stored value not available
+            if hasattr(self.llm, 'model_name'):
+                model_used = self.llm.model_name
+            elif hasattr(self.llm, 'model'):
+                model_used = self.llm.model
+        
         return ToolResult(
             ok=True,
             summary=f"Generated email template with {total_errors} errors and {total_warnings} warnings" + 
@@ -362,7 +384,8 @@ Return only the summary paragraph text, no greeting or closing."""
                 "email_html": email_html,
                 "error_count": total_errors,
                 "warning_count": total_warnings,
-                "llm_summary_used": llm_summary is not None
+                "llm_summary_used": llm_summary is not None,
+                "model_used": model_used  # Track LLM usage per BRD Section 2.3 and PRD-TRD Section 3.2
             },
             warnings=[],
             blockers=[]

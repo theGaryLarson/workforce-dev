@@ -5,8 +5,14 @@ Demo implementation for two-stage SharePoint upload workflow:
 - Stage 2: After approval, upload report to a partner-accessible location
 
 This tool is intentionally implemented with a local filesystem simulation for the POC:
-- Files are copied into evidence_dir / "sharepoint_simulation" / <folder_type> / <run_id> / ...
+- For "internal" and "partner" folder types: Creates link/metadata artifacts (link.json) 
+  pointing to the canonical partner_error_report.xlsx file instead of copying it.
+- For "upload" folder type: Copies corrected files from partner uploads (this represents 
+  the partner uploading a new version, not another copy of the error report).
 - Returned URLs are file:// URLs pointing at the simulated SharePoint locations
+
+Per orchestrator plan: Single canonical partner_error_report.xlsx per run, with 
+internal/partner folders containing only link/metadata artifacts pointing to the same file.
 
 PRODUCTION NOTES:
 - Replace filesystem simulation with real SharePoint integration using SharePointClient
@@ -17,6 +23,7 @@ PRODUCTION NOTES:
 
 from pathlib import Path
 from typing import Any, Dict
+import json
 import shutil
 
 from ..tools import ToolResult
@@ -109,31 +116,70 @@ class UploadSharePointTool:
                 # without real SharePoint + webhooks (BRD FR-012 validation retry).
                 stage_dir = uploads_dir
 
-            # File name convention: <partner>_<quarter>_<original_name>
-            dest_name = f"{partner_name}_{quarter}_{file_path.name}"
-            dest_path = stage_dir / dest_name
-
-            shutil.copy2(file_path, dest_path)
-
-            # For demo: return a file:// URL pointing to the simulated SharePoint path
-            sharepoint_url = f"file:///{dest_path.as_posix()}"
-
-            # PRODUCTION: Replace with actual SharePoint document URL
-            # returned by SharePointClient.upload_file(...)
-            return ToolResult(
-                ok=True,
-                summary=(
-                    f"Uploaded file to simulated SharePoint ({folder_type}) at "
-                    f"{sharepoint_url}"
-                ),
-                data={
-                    "sharepoint_url": sharepoint_url,
-                    "local_path": str(dest_path),
-                    "folder_type": folder_type,
-                },
-                warnings=[],
-                blockers=[],
-            )
+            # Per orchestrator plan: For "internal" and "partner" folder types,
+            # create link/metadata artifacts instead of copying the file.
+            # This ensures a single canonical partner_error_report.xlsx per run.
+            if folder_type in {"internal", "partner", "partner_accessible"}:
+                # Create link.json metadata artifact pointing to canonical file
+                canonical_path = file_path.resolve()  # Absolute path to canonical file
+                link_metadata = {
+                    "canonical_file_path": str(canonical_path),
+                    "file_url": f"file:///{canonical_path.as_posix()}",
+                    "file_name": file_path.name,
+                    "partner_name": partner_name,
+                    "quarter": quarter,
+                    "run_id": run_id,
+                    "created_at": str(Path(__file__).stat().st_mtime)  # Simple timestamp
+                }
+                
+                # Write link.json to the appropriate folder
+                link_json_path = stage_dir / "link.json"
+                with open(link_json_path, 'w', encoding='utf-8') as f:
+                    json.dump(link_metadata, f, indent=2)
+                
+                # Return file:// URL pointing to canonical file (not the link.json)
+                sharepoint_url = f"file:///{canonical_path.as_posix()}"
+                
+                return ToolResult(
+                    ok=True,
+                    summary=(
+                        f"Created link/metadata artifact for simulated SharePoint ({folder_type}) "
+                        f"pointing to canonical file at {sharepoint_url}"
+                    ),
+                    data={
+                        "sharepoint_url": sharepoint_url,
+                        "link_metadata_path": str(link_json_path),
+                        "canonical_file_path": str(canonical_path),
+                        "folder_type": folder_type,
+                    },
+                    warnings=[],
+                    blockers=[],
+                )
+            else:
+                # "upload" folder type: Copy the corrected file (partner upload)
+                # File name convention: <partner>_<quarter>_<original_name>
+                dest_name = f"{partner_name}_{quarter}_{file_path.name}"
+                dest_path = stage_dir / dest_name
+                
+                shutil.copy2(file_path, dest_path)
+                
+                # For demo: return a file:// URL pointing to the simulated SharePoint path
+                sharepoint_url = f"file:///{dest_path.as_posix()}"
+                
+                return ToolResult(
+                    ok=True,
+                    summary=(
+                        f"Uploaded corrected file to simulated SharePoint ({folder_type}) at "
+                        f"{sharepoint_url}"
+                    ),
+                    data={
+                        "sharepoint_url": sharepoint_url,
+                        "local_path": str(dest_path),
+                        "folder_type": folder_type,
+                    },
+                    warnings=[],
+                    blockers=[],
+                )
 
         # PRODUCTION IMPLEMENTATION PLACEHOLDER:
         # In production, this branch should:
