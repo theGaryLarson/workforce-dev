@@ -29,3 +29,6 @@ coverage>=7.13.0
 # Development utilities
 tqdm>=4.67.1
 
+# File system watching (for orchestrator file detection)
+watchdog>=6.0.0
+
