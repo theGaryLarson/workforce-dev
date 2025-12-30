@@ -45,7 +45,10 @@ def write_manifest(
         # Part 3: HITL status fields per BRD FR-012
         "hitl_status": None,  # Will be set if HITL workflow is triggered
         "staff_approval_status": None,  # Will be set if staff approval is requested
-        "resume_available": False  # Will be set if resume state is saved
+        "resume_available": False,  # Will be set if resume state is saved
+        # Orchestrator fields per orchestrator plan
+        "orchestrator_status": None,  # Will be set by orchestrator if used
+        "last_orchestrator_action": None  # Will be set by orchestrator to track actions
     }
     
     # Part 3: Check if HITL workflow was triggered per BRD FR-012
