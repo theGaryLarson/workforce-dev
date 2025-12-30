@@ -54,6 +54,12 @@ agentic_systems/docs/
 !agentic_systems/docs/prd-trd.md
 !agentic_systems/docs/brd.md
 
+# data/masked - ignore entire folder except three specified files
+agentic_systems/data/masked/
+!agentic_systems/data/masked/Example Quarterly Data Report.mock.csv
+!agentic_systems/data/masked/parnter_error_report_corrected.csv
+!agentic_systems/data/masked/dynamics_import.mock.csv
+
 # mock scripts
 agentic_systems/scripts/mock_dynamics_import.py
 agentic_systems/scripts/mock_quarterly_report_data.py
