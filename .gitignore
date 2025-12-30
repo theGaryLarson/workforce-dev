@@ -49,10 +49,10 @@ Thumbs.db
 ~$*.docx
 ~$*.doc
 
-# planning docs
-agentic_systems/docs/*.docx
-agentic_systems/docs/*.doc
-agentic_systems/docs/*.md
+# planning docs - ignore entire docs folder except prd-trd.md and brd.md
+agentic_systems/docs/
+!agentic_systems/docs/prd-trd.md
+!agentic_systems/docs/brd.md
 
 # mock scripts
 agentic_systems/scripts/mock_dynamics_import.py
@@ -68,10 +68,6 @@ GEMINI.md
 best_practices.md
 cfa-applied-agentic-ai.code-workspace
 .cursor/*
-
-agentic_systems/docs/Example Quarterly Data Report.mock_validated.xlsx
-agentic_systems/docs/version2 1.py
-agentic_systems/docs/version2_3.py
 
 # Evidence bundles (exclude run outputs, keep directory structure with .gitkeep)
 agentic_systems/core/audit/runs/*
