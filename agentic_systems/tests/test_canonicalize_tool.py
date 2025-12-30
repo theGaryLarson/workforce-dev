@@ -58,9 +58,13 @@ class TestCanonicalizeStagedDataTool:
 
         # Verify data values are preserved for mapped fields
         if 'first_name' in canonical_df.columns:
-            assert canonical_df['first_name'].tolist() == sample_dataframe['first_name'].tolist()
+            first_name_values = canonical_df['first_name'].tolist()
+            expected_first_names = sample_dataframe['first_name'].tolist()
+            assert first_name_values == expected_first_names
         if 'last_name' in canonical_df.columns:
-            assert canonical_df['last_name'].tolist() == sample_dataframe['last_name'].tolist()
+            last_name_values = canonical_df['last_name'].tolist()
+            expected_last_names = sample_dataframe['last_name'].tolist()
+            assert last_name_values == expected_last_names
 
     def test_additional_fields_preserved(self, sample_dataframe):
         """Test that additional fields not in mapping are preserved."""
