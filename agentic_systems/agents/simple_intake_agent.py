@@ -134,18 +134,25 @@ class SimpleIntakeAgent(BaseAgent):
         per BRD FR-011.
         
         Args:
-            inputs: Dictionary containing file_path and run_id
+            inputs: Dictionary containing file_path, run_id, and optionally partner_name
             
         Returns:
             List of step dictionaries, each with 'tool' and 'args' keys
         """
         file_path = inputs.get('file_path')
+        partner_name = inputs.get('partner_name')
+        client_id = inputs.get('client_id', 'cfa')
         
         # Return structured steps for ingest → validate → canonicalize sequence
+        ingest_args = {'file_path': file_path}
+        if partner_name:
+            ingest_args['partner_name'] = partner_name
+            ingest_args['client_id'] = client_id
+        
         return [
             {
                 'tool': 'IngestPartnerFileTool',
-                'args': {'file_path': file_path}
+                'args': ingest_args
             },
             {
                 'tool': 'ValidateStagedDataTool',
@@ -315,33 +322,6 @@ class SimpleIntakeAgent(BaseAgent):
                 
                 results['GeneratePartnerEmailTool'] = email_result
                 
-                # Stage 1: Upload review worksheet to internal SharePoint/Dataverse
-                # For the POC, this uses a local "sharepoint_simulation" directory
-                # under the evidence bundle to avoid external dependencies.
-                self._emit("STEP_START", "Uploading review worksheet to internal SharePoint (simulated)", {
-                    "tool": "UploadSharePointTool",
-                    "stage": "internal"
-                })
-
-                internal_upload_result = self.upload_sharepoint_tool(
-                    file_path=error_report_path,
-                    folder_type="internal",
-                    partner_name=partner_name,
-                    quarter=quarter,
-                    run_id=self.run_id,
-                    evidence_dir=self.evidence_dir,
-                    demo_mode=True,  # PRODUCTION: set to False and use real SharePointClient
-                )
-
-                self._emit("STEP_END", "Completed UploadSharePointTool (internal)", {
-                    "tool": "UploadSharePointTool",
-                    "stage": "internal",
-                    "sharepoint_url": internal_upload_result.data.get("sharepoint_url"),
-                    **self._sanitize_tool_result(internal_upload_result)
-                })
-
-                results['UploadSharePointTool_internal'] = internal_upload_result
-
                 # Request staff approval per BRD FR-012
                 # Categorize violations using precise pattern matching to avoid double-counting
                 error_summary = {
@@ -361,10 +341,13 @@ class SimpleIntakeAgent(BaseAgent):
                     "tool": "RequestStaffApprovalTool"
                 })
                 
+                # Use canonical file path for staff review (file is in outputs/ folder)
+                canonical_report_url = f"file:///{error_report_path.resolve().as_posix()}"
+                
                 approval_result = self.approval_tool(
                     email_content=email_result.data.get('email_content', ''),
                     error_report_path=error_report_path,
-                    internal_report_url=internal_upload_result.data.get('sharepoint_url'),
+                    internal_report_url=canonical_report_url,
                     error_summary=error_summary,
                     aggregates=aggregates,  # Pass aggregates for staff review
                     partner_name=partner_name,
@@ -383,18 +366,17 @@ class SimpleIntakeAgent(BaseAgent):
                 
                 results['RequestStaffApprovalTool'] = approval_result
                 
-                # If approved, upload partner-facing copy and create secure link per BRD FR-013
+                # If approved, publish error report and create secure link per BRD FR-013
                 if approval_result.ok and approval_result.data.get('approval_status') == 'approved':
-                    # Stage 2: Upload report to partner-accessible location
-                    # For the POC, this is also a simulated SharePoint directory.
-                    self._emit("STEP_START", "Uploading report to partner-accessible SharePoint (simulated)", {
+                    # Publish error report: create link.json in uploads/{partner_name}/ pointing to canonical file
+                    self._emit("STEP_START", "Publishing error report to SharePoint (simulated)", {
                         "tool": "UploadSharePointTool",
-                        "stage": "partner"
+                        "stage": "publish"
                     })
 
-                    partner_upload_result = self.upload_sharepoint_tool(
+                    publish_result = self.upload_sharepoint_tool(
                         file_path=error_report_path,
-                        folder_type="partner",
+                        folder_type="publish",
                         partner_name=partner_name,
                         quarter=quarter,
                         run_id=self.run_id,
@@ -402,14 +384,14 @@ class SimpleIntakeAgent(BaseAgent):
                         demo_mode=True,  # PRODUCTION: set to False and use real SharePointClient
                     )
 
-                    self._emit("STEP_END", "Completed UploadSharePointTool (partner)", {
+                    self._emit("STEP_END", "Completed UploadSharePointTool (publish)", {
                         "tool": "UploadSharePointTool",
-                        "stage": "partner",
-                        "sharepoint_url": partner_upload_result.data.get("sharepoint_url"),
-                        **self._sanitize_tool_result(partner_upload_result)
+                        "stage": "publish",
+                        "sharepoint_url": publish_result.data.get("sharepoint_url"),
+                        **self._sanitize_tool_result(publish_result)
                     })
 
-                    results['UploadSharePointTool_partner'] = partner_upload_result
+                    results['UploadSharePointTool_publish'] = publish_result
 
                     self._emit("STEP_START", "Creating secure link", {
                         "tool": "CreateSecureLinkTool"
@@ -419,11 +401,11 @@ class SimpleIntakeAgent(BaseAgent):
                         error_report_path=error_report_path,
                         evidence_dir=self.evidence_dir,
                         run_id=self.run_id,
-                        # In the POC, this is a file:// URL from UploadSharePointTool.
+                        # In the POC, this is a file:// URL from UploadSharePointTool pointing to canonical file.
                         # PRODUCTION: this would be a real SharePoint URL that
                         # SecureLinkGenerator wraps with code-based or AAD-auth link.
                         # BRD FR-013: Secure link is generated only after staff approval.
-                        sharepoint_url=partner_upload_result.data.get("sharepoint_url"),
+                        sharepoint_url=publish_result.data.get("sharepoint_url"),
                     )
                     
                     self._emit("STEP_END", "Completed CreateSecureLinkTool", {
@@ -577,12 +559,23 @@ class SimpleIntakeAgent(BaseAgent):
             corrected_file_mtime = None
 
         # Re-run ingestion on corrected file
+        # Extract partner_name from inputs or resume_state
+        partner_name = inputs.get('partner_name')
+        if not partner_name and resume_state:
+            partner_name = resume_state.get('partner_name')
+        
         self._emit("STEP_START", "Re-ingesting corrected file", {
             "tool": "IngestPartnerFileTool",
-            "file_path": str(corrected_file_path)
+            "file_path": str(corrected_file_path),
+            "partner_name": partner_name
         })
         
-        ingest_result = self.ingest_tool(file_path=str(corrected_file_path))
+        ingest_kwargs = {"file_path": str(corrected_file_path)}
+        if partner_name:
+            ingest_kwargs["partner_name"] = partner_name
+            ingest_kwargs["client_id"] = inputs.get('client_id', 'cfa')
+        
+        ingest_result = self.ingest_tool(**ingest_kwargs)
         staged_dataframe = ingest_result.data.get('dataframe') if ingest_result.ok else None
         
         self._emit("STEP_END", "Completed re-ingestion", {
