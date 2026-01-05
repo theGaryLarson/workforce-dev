@@ -42,6 +42,7 @@ if str(repo_root) not in sys.path:
 from agentic_systems.agents.simple_intake_agent import SimpleIntakeAgent
 from agentic_systems.agents.orchestrator_agent import OrchestratorAgent
 from agentic_systems.core.audit.write_evidence import write_evidence_bundle
+from agentic_systems.core.tools import ToolResult
 
 # Part 2: LLM orchestration (optional import)
 try:
@@ -69,7 +70,6 @@ def main() -> None:
         ),
     )
     # Orchestrate-specific arguments
-    parser.add_argument("--watch-dir", help="Directory to watch for initial partner uploads (orchestrate only)")
     parser.add_argument("--sharepoint-sim-root", help="Root directory for SharePoint simulation folders (orchestrate only)")
     parser.add_argument("--poll-interval", type=int, default=5, help="Polling interval in seconds (orchestrate only, default: 5)")
     args = parser.parse_args()
@@ -82,31 +82,35 @@ def main() -> None:
             print("Error: Orchestrate action currently only supports 'intake' agent")
             return
         
-        # Default paths if not provided - ensure absolute paths
-        watch_dir = Path(args.watch_dir).resolve() if args.watch_dir else (base_dir / "partner_uploads").resolve()
-        watch_dir.mkdir(parents=True, exist_ok=True)
-        
         # Keep run_id pattern <partner>-<quarter>-<platform> per PRD-TRD Section 11.2
         run_id = f"{args.partner}-{args.quarter}-{args.platform}"
         evidence_dir = base_dir / "core" / "audit" / "runs" / run_id
         evidence_dir.mkdir(parents=True, exist_ok=True)
         
-        # SharePoint simulation root should be inside the evidence_dir per BRD FR-012/FR-013
-        # Structure: evidence_dir/sharepoint_simulation/uploads/<run-id>/
-        sharepoint_sim_root = Path(args.sharepoint_sim_root).resolve() if args.sharepoint_sim_root else evidence_dir / "sharepoint_simulation"
+        # SharePoint simulation root should be at repo root (agentic_systems/sharepoint_simulation/)
+        # Simplified structure: sharepoint_simulation/uploads/{partner_name}/
+        if args.sharepoint_sim_root:
+            sharepoint_sim_root = Path(args.sharepoint_sim_root).resolve()
+        else:
+            # Default to repo root: agentic_systems/sharepoint_simulation/
+            sharepoint_sim_root = base_dir / "sharepoint_simulation"
         
-        # Initialize orchestrator agent
+        # Watch directory is now sharepoint_simulation/uploads/ (simplified structure)
+        watch_dir = sharepoint_sim_root / "uploads"
+        watch_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize orchestrator agent (partner_uploads_dir is now None - we use sharepoint_sim_root/uploads/)
         orchestrator = OrchestratorAgent(
             run_id=run_id,
             evidence_dir=evidence_dir,
             sharepoint_sim_root=sharepoint_sim_root,
-            partner_uploads_dir=watch_dir
+            partner_uploads_dir=None  # No longer used - files come from sharepoint_simulation/uploads/
         )
         
         print(f"=== ORCHESTRATOR MODE (DEMO) ===")
         print(f"BRD FR-012/FR-013: Simulating SharePoint webhook-based orchestration")
         print(f"Partner: {args.partner}, Quarter: {args.quarter}, Platform: {args.platform}")
-        print(f"Watch directory: {watch_dir}")
+        print(f"Watch directory: {watch_dir} (recursive)")
         print(f"SharePoint simulation root: {sharepoint_sim_root}")
         
         # Use watchdog for file system events instead of polling
@@ -143,7 +147,9 @@ def main() -> None:
                         return
                     
                     file_path = Path(event.src_path)
-                    if file_path in self.processed_files:
+                    # Use resolved path for comparison to handle symlinks and path normalization
+                    file_path_resolved = file_path.resolve()
+                    if file_path_resolved in self.processed_files or file_path in self.processed_files:
                         return
                     
                     # Debounce: wait a moment for file to finish writing
@@ -160,16 +166,40 @@ def main() -> None:
                     
                     columns, mtime = file_sig
                     
-                    # Check if this is an initial file (in partner_uploads directory)
-                    watch_dir_path = Path(self.orchestrator.partner_uploads_dir) if self.orchestrator.partner_uploads_dir else None
-                    is_initial = watch_dir_path and str(file_path).startswith(str(watch_dir_path))
+                    # All files are in sharepoint_simulation/uploads/{partner_name}/
+                    # Extract partner name from file path
+                    detected_partner = None
+                    uploads_dir = self.sharepoint_sim_root / "uploads" if self.sharepoint_sim_root else None
+                    if uploads_dir:
+                        try:
+                            # File path should be: sharepoint_simulation/uploads/{partner_name}/filename
+                            relative_path = file_path.relative_to(uploads_dir)
+                            if len(relative_path.parts) > 1:
+                                detected_partner = relative_path.parts[0]
+                        except (ValueError, AttributeError):
+                            pass
                     
-                    # Check for corrected file (in SharePoint uploads directory)
-                    uploads_dir = self.sharepoint_sim_root / "uploads" / self.run_id
-                    try:
-                        is_corrected = uploads_dir.exists() and str(file_path).startswith(str(uploads_dir))
-                    except (AttributeError, ValueError):
-                        is_corrected = False
+                    # Determine if this is an initial file or corrected file
+                    # Initial files: new files in uploads/{partner_name}/ that haven't been processed
+                    # Corrected files: files in uploads/{partner_name}/ that match a run's expected signature
+                    is_initial = False
+                    is_corrected = False
+                    
+                    if detected_partner and uploads_dir:
+                        partner_uploads_dir = uploads_dir / detected_partner
+                        try:
+                            uploads_dir_resolved = uploads_dir.resolve()
+                            file_path_resolved = file_path.resolve()
+                            # Check if file is within uploads/{partner_name}/
+                            if uploads_dir_resolved.exists() and str(file_path_resolved).startswith(str(uploads_dir_resolved)):
+                                # Check if this matches a run's expected signature (corrected file)
+                                # or is a new file (initial file)
+                                # For now, treat as initial if no resume_state.json exists for this partner
+                                # This is a simplification - in production, we'd use more sophisticated matching
+                                is_initial = True  # Will be refined by checking against existing runs
+                                is_corrected = False  # Will be refined by checking resume_state.json
+                        except (AttributeError, ValueError, OSError):
+                            pass
                     
                     # Validate content signature for partner data
                     if is_initial or is_corrected:
@@ -179,8 +209,10 @@ def main() -> None:
                         has_required = any(req_col in columns_lower for req_col in required_columns)
                         
                         if has_required:
+                            # Add both resolved and original path to processed_files to handle path variations
                             self.processed_files.add(file_path)
-                            self._process_file(file_path, is_initial, is_corrected)
+                            self.processed_files.add(file_path_resolved)
+                            self._process_file(file_path, is_initial, is_corrected, detected_partner)
                 
                 def on_modified(self, event: FileSystemEvent):
                     """Handle file modification events using content signature matching."""
@@ -189,7 +221,9 @@ def main() -> None:
                         return
                     
                     file_path = Path(event.src_path)
-                    if file_path in self.processed_files:
+                    # Use resolved path for comparison to handle symlinks and path normalization
+                    file_path_resolved = file_path.resolve()
+                    if file_path_resolved in self.processed_files or file_path in self.processed_files:
                         return
                     
                     # Small delay to ensure file write is complete
@@ -206,28 +240,48 @@ def main() -> None:
                     
                     columns, mtime = file_sig
                     
-                    # Check if this is an initial file (in partner_uploads directory)
-                    watch_dir_path = Path(self.orchestrator.partner_uploads_dir) if self.orchestrator.partner_uploads_dir else None
-                    is_initial = watch_dir_path and str(file_path).startswith(str(watch_dir_path))
+                    # All files are in sharepoint_simulation/uploads/{partner_name}/
+                    # Extract partner name from file path
+                    detected_partner = None
+                    uploads_dir = self.sharepoint_sim_root / "uploads" if self.sharepoint_sim_root else None
+                    if uploads_dir:
+                        try:
+                            # File path should be: sharepoint_simulation/uploads/{partner_name}/filename
+                            relative_path = file_path.relative_to(uploads_dir)
+                            if len(relative_path.parts) > 1:
+                                detected_partner = relative_path.parts[0]
+                        except (ValueError, AttributeError):
+                            pass
                     
-                    # Check for corrected file (in SharePoint uploads directory)
-                    uploads_dir = self.sharepoint_sim_root / "uploads" / self.run_id
-                    try:
-                        is_corrected = uploads_dir.exists() and str(file_path).startswith(str(uploads_dir))
-                    except (AttributeError, ValueError):
-                        is_corrected = False
+                    # Determine if this is an initial file or corrected file
+                    is_initial = False
+                    is_corrected = False
+                    
+                    if detected_partner and uploads_dir:
+                        partner_uploads_dir = uploads_dir / detected_partner
+                        try:
+                            uploads_dir_resolved = uploads_dir.resolve()
+                            file_path_resolved = file_path.resolve()
+                            # Check if file is within uploads/{partner_name}/
+                            if uploads_dir_resolved.exists() and str(file_path_resolved).startswith(str(uploads_dir_resolved)):
+                                is_initial = True  # Will be refined by checking against existing runs
+                                is_corrected = False  # Will be refined by checking resume_state.json
+                        except (AttributeError, ValueError, OSError):
+                            pass
                     
                     # Validate content signature for partner data
-                    if (is_initial or is_corrected) and file_path not in self.processed_files:
+                    if (is_initial or is_corrected) and file_path_resolved not in self.processed_files and file_path not in self.processed_files:
                         required_columns = ['first name', 'last name', 'date of birth']
                         columns_lower = ' '.join(columns).lower()
                         has_required = any(req_col in columns_lower for req_col in required_columns)
                         
                         if has_required:
+                            # Add both resolved and original path to processed_files to handle path variations
                             self.processed_files.add(file_path)
-                            self._process_file(file_path, is_initial, is_corrected)
+                            self.processed_files.add(file_path_resolved)
+                            self._process_file(file_path, is_initial, is_corrected, detected_partner)
                 
-                def _process_file(self, file_path: Path, is_initial: bool, is_corrected: bool):
+                def _process_file(self, file_path: Path, is_initial: bool, is_corrected: bool, detected_partner: str = None):
                     """Process a detected file."""
                     if self.lock:
                         return  # Already processing
@@ -235,20 +289,74 @@ def main() -> None:
                     self.lock = True
                     try:
                         print(f"\n[Orchestrator] Detected file: {file_path.name}")
+                        if detected_partner:
+                            print(f"[Orchestrator] Detected partner: {detected_partner}")
+                        
+                        # Update inputs with detected partner if found
+                        process_inputs = self.inputs.copy()
+                        process_evidence_dir = self.evidence_dir
+                        if detected_partner:
+                            process_inputs['partner'] = detected_partner
+                            # Update run_id to include detected partner
+                            quarter = process_inputs.get('quarter', 'Q1')
+                            platform = process_inputs.get('platform', 'minimal')
+                            new_run_id = f"{detected_partner}-{quarter}-{platform}"
+                            process_inputs['run_id'] = new_run_id
+                            # Update evidence directory for new run_id
+                            base_dir = Path(__file__).resolve().parents[1]
+                            process_evidence_dir = base_dir / "core" / "audit" / "runs" / new_run_id
+                            process_evidence_dir.mkdir(parents=True, exist_ok=True)
+                        
+                        # Ensure orchestrator evidence_dir and run_id are set before execute()
+                        # This ensures orchestrator steps are logged to the correct tool_calls.jsonl
+                        self.orchestrator.evidence_dir = process_evidence_dir
+                        self.orchestrator.run_id = process_inputs.get('run_id', self.run_id)
                         
                         # Plan and execute
-                        plan_steps = self.orchestrator.plan(self.inputs)
+                        plan_steps = self.orchestrator.plan(process_inputs)
                         
                         if plan_steps:
                             # Execute steps
-                            results = self.orchestrator.execute(self.inputs)
+                            results = self.orchestrator.execute(process_inputs)
+                            
+                            # Flatten SimpleIntakeAgent results into orchestrator's run_results
+                            # so that serialize_outputs() can find CanonicalizeStagedDataTool, GeneratePartnerEmailTool, etc.
+                            if 'SimpleIntakeAgent' in results:
+                                intake_result = results['SimpleIntakeAgent']
+                                if isinstance(intake_result, ToolResult) and intake_result.data:
+                                    # Merge intake agent's results into orchestrator's results
+                                    intake_results = intake_result.data
+                                    if isinstance(intake_results, dict):
+                                        # Add intake agent's tool results to orchestrator's results
+                                        for key, value in intake_results.items():
+                                            if key not in results:  # Don't overwrite orchestrator-level results
+                                                results[key] = value
+                            
                             summary = self.orchestrator.summarize(results)
+                            
+                            # Write orchestrator evidence bundle per BRD FR-011
+                            # This includes orchestrator coordination steps and SimpleIntakeAgent execution
+                            from agentic_systems.core.audit.write_evidence import write_evidence_bundle
+                            try:
+                                write_evidence_bundle(
+                                    run_id=process_inputs.get('run_id', self.run_id),
+                                    agent_name="OrchestratorAgent",
+                                    platform=process_inputs.get('platform', 'minimal'),
+                                    plan_steps=plan_steps,
+                                    summary=summary,
+                                    run_results=results,  # Now includes flattened SimpleIntakeAgent results
+                                    evidence_dir=process_evidence_dir,
+                                    model=None
+                                )
+                            except Exception as e:
+                                # Evidence writing should never crash orchestration
+                                print(f"Warning: Failed to write orchestrator evidence bundle: {e}")
                             
                             # Check if we should continue or exit
                             if any(step.get('step') in ['handle_persistent_failure', 'finalize_run'] for step in plan_steps):
                                 print("\n=== ORCHESTRATOR SUMMARY ===")
                                 print(summary)
-                                print(f"\nEvidence bundle at: {self.evidence_dir}")
+                                print(f"\nEvidence bundle at: {process_evidence_dir}")
                                 # Note: In production, this would stop the observer
                             else:
                                 # Print wait status
@@ -266,7 +374,7 @@ def main() -> None:
                                     # corrected upload re-validation passed and canonicalization ran.
                                     print("\n=== ORCHESTRATOR SUMMARY ===")
                                     print(summary)
-                                    print(f"\nEvidence bundle at: {self.evidence_dir}")
+                                    print(f"\nEvidence bundle at: {process_evidence_dir}")
                     finally:
                         self.lock = False
             
@@ -280,23 +388,28 @@ def main() -> None:
             
             observer = Observer()
             
-            # Watch both the partner uploads directory and SharePoint uploads directory
-            observer.schedule(event_handler, str(watch_dir), recursive=False)
-            
-            uploads_dir = sharepoint_sim_root / "uploads" / run_id
-            uploads_dir.mkdir(parents=True, exist_ok=True)
-            observer.schedule(event_handler, str(uploads_dir), recursive=False)
+            # Watch only sharepoint_simulation/uploads/ recursively (simplified structure)
+            observer.schedule(event_handler, str(watch_dir), recursive=True)
             
             # Check for existing files on startup
+            # Note: _detect_initial_file now looks in sharepoint_simulation/uploads/{partner}/
             initial_file = orchestrator._detect_initial_file(args.partner, args.quarter)
             if initial_file:
                 print(f"[Orchestrator] Found existing initial file: {initial_file.name}")
-                event_handler._process_file(initial_file, True, False)
+                # Extract partner from file path
+                detected_partner = args.partner
+                try:
+                    relative_path = initial_file.relative_to(watch_dir)
+                    if len(relative_path.parts) > 1:
+                        detected_partner = relative_path.parts[0]
+                except (ValueError, AttributeError):
+                    pass
+                event_handler._process_file(initial_file, True, False, detected_partner)
             
-            corrected_file = orchestrator._detect_corrected_file(run_id)
+            corrected_file = orchestrator._detect_corrected_file(run_id, args.partner)
             if corrected_file:
                 print(f"[Orchestrator] Found existing corrected file: {corrected_file.name}")
-                event_handler._process_file(corrected_file, False, True)
+                event_handler._process_file(corrected_file, False, True, args.partner)
             
             observer.start()
             
@@ -325,12 +438,48 @@ def main() -> None:
                         "run_id": run_id
                     }
                     
+                    # Ensure orchestrator evidence_dir and run_id are set before execute()
+                    orchestrator.evidence_dir = evidence_dir
+                    orchestrator.run_id = run_id
+                    
                     plan_steps = orchestrator.plan(inputs)
                     
                     if plan_steps:
                         # Execute steps
                         results = orchestrator.execute(inputs)
+                        
+                        # Flatten SimpleIntakeAgent results into orchestrator's run_results
+                        # so that serialize_outputs() can find CanonicalizeStagedDataTool, GeneratePartnerEmailTool, etc.
+                        if 'SimpleIntakeAgent' in results:
+                            intake_result = results['SimpleIntakeAgent']
+                            if isinstance(intake_result, ToolResult) and intake_result.data:
+                                # Merge intake agent's results into orchestrator's results
+                                intake_results = intake_result.data
+                                if isinstance(intake_results, dict):
+                                    # Add intake agent's tool results to orchestrator's results
+                                    for key, value in intake_results.items():
+                                        if key not in results:  # Don't overwrite orchestrator-level results
+                                            results[key] = value
+                        
                         summary = orchestrator.summarize(results)
+                        
+                        # Write orchestrator evidence bundle per BRD FR-011
+                        # This includes orchestrator coordination steps and SimpleIntakeAgent execution
+                        from agentic_systems.core.audit.write_evidence import write_evidence_bundle
+                        try:
+                            write_evidence_bundle(
+                                run_id=run_id,
+                                agent_name="OrchestratorAgent",
+                                platform=inputs.get('platform', 'minimal'),
+                                plan_steps=plan_steps,
+                                summary=summary,
+                                run_results=results,  # Now includes flattened SimpleIntakeAgent results
+                                evidence_dir=evidence_dir,
+                                model=None
+                            )
+                        except Exception as e:
+                            # Evidence writing should never crash orchestration
+                            print(f"Warning: Failed to write orchestrator evidence bundle: {e}")
                         
                         # Check if we should continue or exit
                         if any(step.get('step') in ['handle_persistent_failure', 'finalize_run'] for step in plan_steps):
@@ -493,12 +642,13 @@ def main() -> None:
                 return
 
             # Determine simulated SharePoint uploads folder for corrected files.
-            uploads_dir = (
-                resume_evidence_dir
-                / "sharepoint_simulation"
-                / "uploads"
-                / watch_run_id
-            )
+            # Extract partner from run_id
+            parts = watch_run_id.split('-')
+            partner_name = parts[0] if len(parts) > 0 else 'demo'
+            
+            # SharePoint simulation is at repo root, not in evidence_dir
+            base_dir = Path(__file__).resolve().parents[1]
+            uploads_dir = base_dir / "sharepoint_simulation" / "uploads" / partner_name
 
             uploads_dir.mkdir(parents=True, exist_ok=True)
 

@@ -48,8 +48,17 @@ def write_manifest(
         "resume_available": False,  # Will be set if resume state is saved
         # Orchestrator fields per orchestrator plan
         "orchestrator_status": None,  # Will be set by orchestrator if used
-        "last_orchestrator_action": None  # Will be set by orchestrator to track actions
+        "last_orchestrator_action": None,  # Will be set by orchestrator to track actions
+        # Coordinated agent: When OrchestratorAgent coordinates another agent (e.g., SimpleIntakeAgent),
+        # this field preserves which agent was actually executed for the business logic
+        "coordinated_agent": None  # Will be set if OrchestratorAgent coordinates another agent
     }
+    
+    # If OrchestratorAgent coordinated another agent, extract the coordinated agent name from run_results
+    if agent_name == "OrchestratorAgent" and run_results:
+        # Check if SimpleIntakeAgent was invoked (it will be in run_results)
+        if "SimpleIntakeAgent" in run_results:
+            manifest["coordinated_agent"] = "SimpleIntakeAgent"
     
     # Part 3: Check if HITL workflow was triggered per BRD FR-012
     if run_results and run_results.get('_halted'):

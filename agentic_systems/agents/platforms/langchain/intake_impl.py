@@ -221,6 +221,8 @@ Return ONLY the JSON array, no other text."""
         
         self.tool_calls_log.append(event)
         
+        # Append to tool_calls.jsonl per BRD FR-011
+        # CRITICAL: Always use append mode ('a') to preserve complete audit trail including corrections/resumes
         if self.evidence_dir:
             tool_calls_path = self.evidence_dir / "tool_calls.jsonl"
             with open(tool_calls_path, 'a', encoding='utf-8') as f:

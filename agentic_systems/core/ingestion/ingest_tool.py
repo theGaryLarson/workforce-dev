@@ -2,7 +2,7 @@
 
 import hashlib
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
@@ -14,15 +14,18 @@ class IngestPartnerFileTool:
     
     Supports CSV and Excel files with encoding detection. Normalizes column names
     and computes file hash for idempotency per PRD-TRD Section 5.4.
+    Supports partner-specific parsing configurations for multi-partner support.
     """
     
     name = "IngestPartnerFileTool"
     
-    def __call__(self, file_path: str) -> ToolResult:
+    def __call__(self, file_path: str, partner_name: Optional[str] = None, client_id: str = "cfa") -> ToolResult:
         """Parse file and return DataFrame with metadata per BRD FR-001 acceptance criteria.
         
         Args:
             file_path: Path to the partner file (CSV or Excel)
+            partner_name: Partner identifier (e.g., "test-partner-1") for partner-specific parsing
+            client_id: Client identifier (default: "cfa")
             
         Returns:
             ToolResult with in-memory DataFrame in data for tool chaining.
@@ -33,12 +36,42 @@ class IngestPartnerFileTool:
         try:
             path = Path(file_path)
             
+            # Load partner-specific parsing configuration if partner_name is provided
+            parsing_config = None
+            if partner_name:
+                try:
+                    from ...clients.cfa.partners import load_partner_parsing_config
+                    parsing_config = load_partner_parsing_config(client_id, partner_name)
+                except Exception:
+                    # If partner config loading fails, continue with default parsing
+                    pass
+            
+            # Determine encoding preferences from parsing config or use defaults
+            encodings = ['utf-8', 'windows-1252', 'latin-1']
+            if parsing_config and 'file_structure' in parsing_config:
+                file_structure = parsing_config['file_structure']
+                if 'encoding_preferences' in file_structure:
+                    encodings = file_structure['encoding_preferences']
+            
+            # Determine header row and data start row from parsing config or use defaults
+            header_row = 0  # pandas default
+            skiprows = None
+            if parsing_config and 'file_structure' in parsing_config:
+                file_structure = parsing_config['file_structure']
+                header_row = file_structure.get('header_row', 1) - 1  # Convert to 0-based
+                data_start_row = file_structure.get('data_start_row', 2)
+                if data_start_row > 1:
+                    skiprows = list(range(header_row + 1, data_start_row - 1))
+            
             # Parse file per BRD FR-001 acceptance criteria
             if path.suffix.lower() == '.csv':
                 # Try multiple encodings per BRD FR-001
-                for encoding in ['utf-8', 'windows-1252', 'latin-1']:
+                for encoding in encodings:
                     try:
-                        df = pd.read_csv(file_path, encoding=encoding)
+                        read_kwargs = {'encoding': encoding, 'header': header_row}
+                        if skiprows:
+                            read_kwargs['skiprows'] = skiprows
+                        df = pd.read_csv(file_path, **read_kwargs)
                         break
                     except UnicodeDecodeError:
                         continue
@@ -51,7 +84,10 @@ class IngestPartnerFileTool:
                         blockers=[f"Encoding detection failed for {file_path}"]
                     )
             elif path.suffix.lower() in ['.xlsx', '.xls']:
-                df = pd.read_excel(file_path, engine='openpyxl')
+                read_kwargs = {'engine': 'openpyxl', 'header': header_row}
+                if skiprows:
+                    read_kwargs['skiprows'] = skiprows
+                df = pd.read_excel(file_path, **read_kwargs)
             else:
                 return ToolResult(
                     ok=False,
@@ -63,6 +99,24 @@ class IngestPartnerFileTool:
             
             # Clean up headers (whitespace only) to preserve original sheet names for validator
             df.columns = df.columns.str.strip()
+            
+            # Apply partner-specific column mappings if parsing config exists
+            if parsing_config and 'column_mappings' in parsing_config:
+                column_mappings = parsing_config['column_mappings']
+                # Rename columns based on partner-specific mappings
+                # Map partner column names to canonical field names
+                rename_dict = {}
+                for partner_col, canonical_field in column_mappings.items():
+                    # Find matching column (case-insensitive, handle multi-line headers)
+                    for col in df.columns:
+                        # Extract first line if multi-line header
+                        col_first_line = str(col).split('\n')[0].strip()
+                        if col_first_line.lower() == partner_col.lower():
+                            rename_dict[col] = canonical_field
+                            break
+                
+                if rename_dict:
+                    df = df.rename(columns=rename_dict)
             
             # Preserve zip codes as strings (prevent pandas from converting to float)
             # Find zip code column(s) - may be named 'zip_code', 'zip', etc.

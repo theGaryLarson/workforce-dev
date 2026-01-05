@@ -1,18 +1,19 @@
 """UploadSharePointTool per BRD FR-012 and FR-013.
 
-Demo implementation for two-stage SharePoint upload workflow:
-- Stage 1: Upload validation review worksheet to an internal location for CFA staff review
-- Stage 2: After approval, upload report to a partner-accessible location
+Simplified implementation using a single uploads/ folder for all file operations:
+- Partner file uploads (initial and corrected files) are placed in uploads/{partner_name}/
+- Error report publishing creates link.json metadata in uploads/{partner_name}/ pointing 
+  to the canonical file in outputs/partner_error_report.xlsx
 
 This tool is intentionally implemented with a local filesystem simulation for the POC:
-- For "internal" and "partner" folder types: Creates link/metadata artifacts (link.json) 
-  pointing to the canonical partner_error_report.xlsx file instead of copying it.
-- For "upload" folder type: Copies corrected files from partner uploads (this represents 
-  the partner uploading a new version, not another copy of the error report).
+- For "publish" folder type: Creates link/metadata artifacts (link.json) pointing to 
+  the canonical partner_error_report.xlsx file in the evidence bundle outputs/ folder.
+- For "upload" folder type: Copies partner files (initial uploads or corrected files) 
+  to uploads/{partner_name}/ for processing.
 - Returned URLs are file:// URLs pointing at the simulated SharePoint locations
 
-Per orchestrator plan: Single canonical partner_error_report.xlsx per run, with 
-internal/partner folders containing only link/metadata artifacts pointing to the same file.
+Per orchestrator plan: Single canonical partner_error_report.xlsx per run in outputs/,
+with link.json metadata in uploads/{partner_name}/ for publishing/sharing.
 
 PRODUCTION NOTES:
 - Replace filesystem simulation with real SharePoint integration using SharePointClient
@@ -33,21 +34,21 @@ class UploadSharePointTool:
     """Uploads validation reports to simulated SharePoint locations for HITL workflow.
     
     For the POC, this tool simulates SharePoint by copying files into a local
-    "sharepoint_simulation" directory under the evidence bundle. This allows
-    us to exercise the full two-stage upload workflow without external
-    dependencies while keeping the interface compatible with a future
-    SharePointClient implementation.
+    "sharepoint_simulation" directory at the repo root (agentic_systems/sharepoint_simulation/).
+    This allows us to exercise the full upload workflow without external dependencies while 
+    keeping the interface compatible with a future SharePointClient implementation.
     
-    Folder types (demo simulation of SharePoint libraries):
-    - "internal":   Internal CFA staff location used for review before approval (BRD FR-012)
-    - "partner":    Partner-accessible location used after staff approval (BRD FR-013)
-    - "upload":     Simulated partner upload/drop-off location for corrected files so we can
-                    test validation retry/resume flows without real SharePoint webhooks (BRD FR-012)
+    Folder types (simplified structure):
+    - "publish":    Creates link.json metadata in uploads/{partner_name}/ pointing to the 
+                    canonical error report in outputs/partner_error_report.xlsx (for both 
+                    internal and partner access)
+    - "upload":     Copies partner files (initial uploads or corrected files) to 
+                    uploads/{partner_name}/ for processing
     
     PRODUCTION:
     - Replace the local copy logic with SharePointClient.upload_file(...)
-    - Use distinct document libraries or folders for internal vs partner locations
-    - Ensure appropriate permissions and access controls per BRD FR-012/FR-013
+    - Use appropriate document libraries or folders with proper permissions
+    - Ensure appropriate access controls per BRD FR-012/FR-013
     """
 
     name = "UploadSharePointTool"
@@ -55,7 +56,7 @@ class UploadSharePointTool:
     def __call__(
         self,
         file_path: Path,
-        folder_type: str,  # "internal", "partner", or "upload" (demo simulation)
+        folder_type: str,  # "publish" or "upload" (simplified)
         partner_name: str,
         quarter: str,
         run_id: str,
@@ -65,24 +66,25 @@ class UploadSharePointTool:
         """Upload file to simulated SharePoint (demo) or real SharePoint (future).
 
         Args:
-            file_path: Local file to upload (e.g., partner_error_report.xlsx)
-            folder_type: "internal" for staff-only location, "partner" for partner-accessible
-                         location, or "upload" for simulated partner upload folder.
+            file_path: Local file to upload (e.g., partner_error_report.xlsx for publish, 
+                      or partner data file for upload)
+            folder_type: "publish" to create link.json metadata in uploads/{partner_name}/ 
+                         pointing to canonical file, or "upload" to copy partner files
             partner_name: Partner identifier (used in simulated folder structure)
             quarter: Quarter identifier (e.g., "Q1")
-            run_id: Run identifier (used in simulated folder structure)
-            evidence_dir: Evidence bundle directory (root for sharepoint_simulation in demo_mode)
+            run_id: Run identifier (for metadata only, not used in folder structure)
+            evidence_dir: Evidence bundle directory (used to locate canonical file for publish)
             demo_mode: When True, use filesystem simulation; when False, hook up real SharePoint
 
         Returns:
             ToolResult with sharepoint_url and local_path in data.
         """
-        if folder_type not in {"internal", "partner", "upload"}:
+        if folder_type not in {"publish", "upload"}:
             return ToolResult(
                 ok=False,
                 summary=(
                     f"Invalid folder_type '{folder_type}' "
-                    "(expected 'internal', 'partner', or 'upload')"
+                    "(expected 'publish' or 'upload')"
                 ),
                 data={},
                 warnings=[],
@@ -91,36 +93,18 @@ class UploadSharePointTool:
 
         # DEMO IMPLEMENTATION: Local filesystem "SharePoint" simulation
         if demo_mode:
-            base_sim_dir = evidence_dir / "sharepoint_simulation"
+            # SharePoint simulation lives at repo root: agentic_systems/sharepoint_simulation/
+            # Go up from core/partner_communication to agentic_systems, then to sharepoint_simulation
+            base_dir = Path(__file__).resolve().parents[2]  # Go up to agentic_systems
+            base_sim_dir = base_dir / "sharepoint_simulation"
             
-            # Initialize all three folder types for the run_id (per POC plan structure)
-            # This ensures the uploads folder exists even if not immediately used
-            # Per POC plan: sharepoint_simulation/internal/, partner_accessible/, and uploads/
-            internal_dir = base_sim_dir / "internal" / run_id
-            partner_dir = base_sim_dir / "partner_accessible" / run_id
-            uploads_dir = base_sim_dir / "uploads" / run_id
-            
-            # Create all three directories upfront so partners know where to upload corrected files
-            internal_dir.mkdir(parents=True, exist_ok=True)
-            partner_dir.mkdir(parents=True, exist_ok=True)
+            # Simplified structure: only uploads/{partner_name}/ folder
+            uploads_dir = base_sim_dir / "uploads" / partner_name
             uploads_dir.mkdir(parents=True, exist_ok=True)
             
-            # Map folder_type to the appropriate directory
-            if folder_type == "internal":
-                stage_dir = internal_dir
-            elif folder_type == "partner" or folder_type == "partner_accessible":
-                stage_dir = partner_dir
-            else:
-                # "upload": simulated partner upload folder for corrected files.
-                # This allows testing resume/polling flows after approval in the POC
-                # without real SharePoint + webhooks (BRD FR-012 validation retry).
-                stage_dir = uploads_dir
-
-            # Per orchestrator plan: For "internal" and "partner" folder types,
-            # create link/metadata artifacts instead of copying the file.
-            # This ensures a single canonical partner_error_report.xlsx per run.
-            if folder_type in {"internal", "partner", "partner_accessible"}:
-                # Create link.json metadata artifact pointing to canonical file
+            if folder_type == "publish":
+                # Create link.json metadata artifact pointing to canonical file in outputs/
+                # The canonical file is in the evidence bundle outputs/ folder
                 canonical_path = file_path.resolve()  # Absolute path to canonical file
                 link_metadata = {
                     "canonical_file_path": str(canonical_path),
@@ -132,8 +116,8 @@ class UploadSharePointTool:
                     "created_at": str(Path(__file__).stat().st_mtime)  # Simple timestamp
                 }
                 
-                # Write link.json to the appropriate folder
-                link_json_path = stage_dir / "link.json"
+                # Write link.json to uploads/{partner_name}/ folder
+                link_json_path = uploads_dir / "link.json"
                 with open(link_json_path, 'w', encoding='utf-8') as f:
                     json.dump(link_metadata, f, indent=2)
                 
@@ -143,7 +127,7 @@ class UploadSharePointTool:
                 return ToolResult(
                     ok=True,
                     summary=(
-                        f"Created link/metadata artifact for simulated SharePoint ({folder_type}) "
+                        f"Created link/metadata artifact in uploads/{partner_name}/ "
                         f"pointing to canonical file at {sharepoint_url}"
                     ),
                     data={
@@ -156,10 +140,10 @@ class UploadSharePointTool:
                     blockers=[],
                 )
             else:
-                # "upload" folder type: Copy the corrected file (partner upload)
+                # "upload" folder type: Copy the partner file (initial upload or corrected file)
                 # File name convention: <partner>_<quarter>_<original_name>
                 dest_name = f"{partner_name}_{quarter}_{file_path.name}"
-                dest_path = stage_dir / dest_name
+                dest_path = uploads_dir / dest_name
                 
                 shutil.copy2(file_path, dest_path)
                 
@@ -169,7 +153,7 @@ class UploadSharePointTool:
                 return ToolResult(
                     ok=True,
                     summary=(
-                        f"Uploaded corrected file to simulated SharePoint ({folder_type}) at "
+                        f"Uploaded file to simulated SharePoint uploads/{partner_name}/ at "
                         f"{sharepoint_url}"
                     ),
                     data={

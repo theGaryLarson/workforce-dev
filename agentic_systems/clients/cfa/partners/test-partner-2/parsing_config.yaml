@@ -1,0 +1,67 @@
+# Partner-specific parsing configuration for test-partner-2
+# Simplified format for demonstration (different from test-partner-1)
+
+partner: test-partner-2
+client: cfa
+version: 1.0.0
+
+# File structure configuration
+file_structure:
+  header_row: 1  # Headers are in row 1
+  data_start_row: 2  # Data starts at row 2
+  min_columns: 20  # Simplified format with fewer columns
+  encoding_preferences:
+    - utf-8
+    - windows-1252
+
+# Date format configuration
+date_format: YYYY-MM-DD  # ISO format (different from test-partner-1)
+
+# Column name mappings: partner column names → canonical field names
+# Simplified column names for test-partner-2
+column_mappings:
+  # Basic participant information
+  "LastName": "last_name"
+  "FirstName": "first_name"
+  "DOB": "date_of_birth"
+  
+  # Address information
+  "Street": "address_1"
+  "City": "city"
+  "State": "state"
+  "Zip": "zip_code"
+  
+  # Contact information
+  "Email": "email"
+  "Phone": "phone"
+  
+  # Training information
+  "Program": "tech_role_pathway"
+  "StartDate": "training_start_date"
+  "EndDate": "training_exit_date"
+  "Status": "current_program_status"
+  
+  # Employment information
+  "EmpStatus": "employment_status"
+  "Employer": "employer_name"
+  "Wage": "hourly_earnings"
+
+# No multi-line headers for test-partner-2
+multi_line_header_handling:
+  enabled: false
+
+# Data transformations to apply after parsing
+transformations:
+  # Zip code handling
+  zip_code:
+    - type: string_conversion
+      description: "Convert to string, remove .0 suffix if present"
+  
+  # Date parsing (ISO format)
+  dates:
+    - fields:
+        - date_of_birth
+        - training_start_date
+        - training_exit_date
+        - job_start_date
+      format: YYYY-MM-DD
