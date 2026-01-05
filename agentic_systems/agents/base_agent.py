@@ -64,6 +64,8 @@ class BaseAgent(ABC):
         self.tool_calls_log.append(event)
         
         # Append to tool_calls.jsonl per BRD FR-011
+        # CRITICAL: Always use append mode ('a') to preserve complete audit trail including corrections/resumes
+        # This ensures we have a full history: initial run → corrections → resume, not just the final result
         if self.evidence_dir:
             tool_calls_path = self.evidence_dir / "tool_calls.jsonl"
             with open(tool_calls_path, 'a', encoding='utf-8') as f:
@@ -172,28 +174,6 @@ class BaseAgent(ABC):
             Dictionary with step outcomes
         """
         plan_steps = self.plan(inputs)
-        
-        # #region agent log
-        try:
-            import json
-            import time
-            log_path = r"c:\Users\garyl\repos\cfa-projects\cfa-applied-agentic-ai\.cursor\debug.log"
-            with open(log_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps({
-                    "sessionId": "debug-session",
-                    "runId": getattr(self, 'run_id', 'unknown'),
-                    "hypothesisId": "H1",
-                    "location": "base_agent.py:execute:plan_received",
-                    "message": "Received plan steps from plan()",
-                    "data": {
-                        "step_count": len(plan_steps),
-                        "steps": plan_steps
-                    },
-                    "timestamp": int(time.time() * 1000)
-                }) + "\n")
-        except Exception:
-            pass
-        # #endregion
         
         results = {}
         context = {}  # Execution context (e.g., staged_dataframe)
