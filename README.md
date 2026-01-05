@@ -99,17 +99,19 @@ uv run python -m agentic_systems.cli.main <command>
 
 #### OrchestratorAgent
 
-Coordinates the intake workflow, detects partner file uploads, manages HITL pauses, and resumes processing when corrected files are uploaded.
+Coordinates the intake workflow, detects partner file uploads from partner-specific subfolders, manages HITL pauses, and resumes processing when corrected files are uploaded.
 
 - **Purpose**: Orchestrates the complete intake workflow with file detection and HITL integration
 - **Tools Used**: 
   - Uses `SimpleIntakeAgent` internally for data processing
   - Special orchestration tools: `inspect_run_status`, `wait_for_partner_correction`, `wait_for_initial_upload`
 - **Key Features**:
-  - File system monitoring (watchdog) for partner uploads
+  - File system monitoring (watchdog) for partner uploads in partner-specific subfolders
+  - Partner detection from file path (extracts partner name from `sharepoint_simulation/uploads/{partner_name}/` structure)
   - Content signature matching for file detection
   - Resume state management for HITL workflows
-  - SharePoint simulation for partner file uploads
+  - SharePoint simulation at repo root (`agentic_systems/sharepoint_simulation/`) with simplified structure
+  - Watches `sharepoint_simulation/uploads/` recursively for both initial files and corrected files
 
 #### SimpleIntakeAgent
 
@@ -117,16 +119,20 @@ Processes partner data through the complete intake pipeline: ingestion → valid
 
 - **Purpose**: Core intake agent that processes partner files end-to-end
 - **Tools Used**:
-  - `IngestPartnerFileTool` - Loads and parses partner files (CSV/Excel)
-  - `ValidateStagedDataTool` - Validates data against business rules
-  - `CanonicalizeStagedDataTool` - Transforms validated data to canonical format
+  - `IngestPartnerFileTool` - Loads and parses partner files (CSV/Excel) using partner-specific parsing configurations
+  - `ValidateStagedDataTool` - Validates data against shared business rules (client-level validation rules)
+  - `CanonicalizeStagedDataTool` - Transforms validated data to canonical format using shared canonical mappings
 - **Partner Communication Tools** (HITL workflow):
   - `CollectWSACAggregatesTool` - Collects WSAC aggregate data for comparison
   - `GeneratePartnerErrorReportTool` - Generates Excel error reports with comments
   - `GeneratePartnerEmailTool` - Generates partner notification emails
   - `CreateSecureLinkTool` - Creates secure access links for error reports
   - `RequestStaffApprovalTool` - Requests staff approval for validation exceptions
-  - `UploadSharePointTool` - Uploads files to SharePoint simulation folders
+  - `UploadSharePointTool` - Uploads files to SharePoint simulation folders (partner-based organization)
+- **Partner-Specific Configuration**:
+  - Each partner has a parsing configuration at `clients/cfa/partners/{partner_name}/parsing_config.yaml`
+  - Parsing configs map partner-specific file formats (column names, date formats, file structure) to canonical schema
+  - Validation rules and canonical mappings remain shared at client level (`clients/cfa/rules.py` and `clients/cfa/client_spec.yaml`)
 
 #### ReconciliationAgent
 
@@ -153,6 +159,19 @@ Generates validated export files for WSAC bulk upload and Dynamics import.
 
 ```
 agentic_systems/
+├── partner_uploads/            # Partner file uploads
+│   ├── test-partner-1/         # Partner 1 uploads
+│   └── test-partner-2/         # Partner 2 uploads
+│
+├── sharepoint_simulation/       # SharePoint simulation (repo root)
+│   ├── uploads/                # Partner uploads for corrected files
+│   │   ├── test-partner-1/     # Partner 1 corrected files
+│   │   └── test-partner-2/     # Partner 2 corrected files
+│   ├── partner_accessible/      # Partner-accessible reports
+│   │   ├── test-partner-1/     # Partner 1 reports
+│   │   └── test-partner-2/     # Partner 2 reports
+│   └── internal/               # Internal staff review (run-based)
+│
 ├── core/                       # Deterministic, platform-agnostic logic
 │   ├── canonical/              # CDM + canonicalization logic
 │   ├── ingestion/              # Partner file ingestion
@@ -184,9 +203,13 @@ agentic_systems/
 │
 ├── clients/
 │   └── cfa/
-│       ├── client_spec.yaml   # CFA-specific configuration
-│       ├── rules.py           # Reporting rules
-│       └── mappings.py        # External system mappings
+│       ├── partners/           # Partner-specific configurations
+│       │   ├── test-partner-1/
+│       │   │   └── parsing_config.yaml  # Partner 1 parsing config
+│       │   └── test-partner-2/
+│       │       └── parsing_config.yaml  # Partner 2 parsing config
+│       ├── client_spec.yaml   # Shared canonical mappings
+│       └── rules.py           # Shared validation rules
 │
 ├── cli/
 │   └── main.py                 # CLI entrypoint & run coordinator
@@ -212,7 +235,6 @@ uv run python -m agentic_systems.cli.main orchestrate intake `
   --partner <partner> `
   --quarter <quarter> `
   --platform <platform> `
-  [--watch-dir <path>] `
   [--sharepoint-sim-root <path>] `
   [--poll-interval <seconds>]
 ```
@@ -223,22 +245,20 @@ uv run python -m agentic_systems.cli.main orchestrate intake \
   --partner <partner> \
   --quarter <quarter> \
   --platform <platform> \
-  [--watch-dir <path>] \
   [--sharepoint-sim-root <path>] \
   [--poll-interval <seconds>]
 ```
 
 **Arguments:**
-- `--partner` (required): Partner identifier (e.g., "demo")
+- `--partner` (required): Partner identifier (e.g., "test-partner-1", "test-partner-2"). Used for partner detection and to determine which parsing configuration to load.
 - `--quarter` (required): Reporting quarter (e.g., "Q1", "Q2")
 - `--platform` (optional, default: "minimal"): Agent platform to use
-- `--watch-dir` (optional): Directory to watch for initial partner uploads (default: `partner_uploads/`)
-- `--sharepoint-sim-root` (optional): Root directory for SharePoint simulation folders (default: `evidence_dir/sharepoint_simulation/`)
+- `--sharepoint-sim-root` (optional): Root directory for SharePoint simulation folders (default: `agentic_systems/sharepoint_simulation/`). The orchestrator watches `sharepoint_simulation/uploads/` recursively for partner-specific uploads.
 - `--poll-interval` (optional): Polling interval in seconds if watchdog unavailable (default: 5)
 
 **Example:**
 ```bash
-uv run python -m agentic_systems.cli.main orchestrate intake --partner demo --quarter Q1 --platform minimal
+uv run python -m agentic_systems.cli.main orchestrate intake --partner test-partner-1 --quarter Q1 --platform minimal
 ```
 
 **Expected Output:**
@@ -248,13 +268,17 @@ uv run python -m agentic_systems.cli.main orchestrate intake --partner demo --qu
 
 ### Orchestrator prompts & partner file flow
 
-The orchestrator prints an execution banner, the BRD references it is demonstrating, the partner/quarter/platform trio, and the two directories it is watching (`partner_uploads/` by default and the `sharepoint_simulation/` root inside the run’s evidence directory). If `watchdog` is installed you also see `Using file system events (watchdog) for file detection`; otherwise you see a warning plus `Polling interval: <seconds>` before it begins watching manually. While waiting for uploads you will see `Waiting for initial upload or corrected files... (Ctrl+C to cancel)` and, when a file is spotted, `[Orchestrator] Detected file: <filename>` followed by the generated summary. If the orchestrator pauses for a corrected upload, the console prints the associated wait summary (e.g., `[Orchestrator] Waiting for partner correction...`) so you know when to drop the corrected CSV.
+The orchestrator prints an execution banner, the BRD references it is demonstrating, the partner/quarter/platform trio, and the directory it is watching (`sharepoint_simulation/uploads/` at repo root, watched recursively for partner subfolders). If `watchdog` is installed you also see `Using file system events (watchdog) for file detection`; otherwise you see a warning plus `Polling interval: <seconds>` before it begins watching manually. While waiting for uploads you will see `Waiting for initial upload or corrected files... (Ctrl+C to cancel)` and, when a file is spotted, `[Orchestrator] Detected file: <filename>` followed by `[Orchestrator] Detected partner: <partner_name>` and the generated summary. If the orchestrator pauses for a corrected upload, the console prints the associated wait summary (e.g., `[Orchestrator] Waiting for partner correction...`) so you know when to drop the corrected CSV.
 
-The default watch directory is `partner_uploads/`, which already contains `Example Quarterly Data Report.mock.csv` so the orchestrator can immediately detect the initial ingest data without requiring you to copy anything—you can watch the console while it processes that file end-to-end. When the orchestrator is waiting for a corrected file (after producing the partner error report), place the corrected CSV into the sharepoint uploads folder `agentic_systems/core/audit/runs/<run-id>/sharepoint_simulation/uploads/<run-id>/` (or whatever path you supplied via `--sharepoint-sim-root`). The CLI is already monitoring that folder for new files, so a drop or save there triggers the same detection flow and lets the run resume automatically.
+The orchestrator watches `sharepoint_simulation/uploads/` which contains partner-specific subfolders (e.g., `sharepoint_simulation/uploads/test-partner-1/`, `sharepoint_simulation/uploads/test-partner-2/`). **Both initial files and corrected files** should be placed in the appropriate partner subfolder. The orchestrator detects the partner name from the file path and loads the corresponding parsing configuration. When placing files:
+- **Initial files**: Place in `agentic_systems/sharepoint_simulation/uploads/{partner_name}/` (e.g., `sharepoint_simulation/uploads/test-partner-1/Example Quarterly Data Report.mock.csv`)
+- **Corrected files**: Place in the same location `agentic_systems/sharepoint_simulation/uploads/{partner_name}/` (e.g., `sharepoint_simulation/uploads/test-partner-1/partner_error_report_corrected.csv`)
 
-### Understanding a run’s artifacts
+The CLI monitors this folder recursively for new files, so a drop or save there triggers the detection flow and lets the run process or resume automatically.
 
-Every run stores all evidence under `agentic_systems/core/audit/runs/<run-id>/`. The most important artifacts are:
+### Understanding a run's artifacts
+
+Every run stores all evidence under `agentic_systems/core/audit/runs/<run-id>/` where `<run-id>` follows the pattern `<partner>-<quarter>-<platform>` (e.g., `test-partner-1-Q1-minimal`). The most important artifacts are:
 
 - `manifest.json`: Run metadata, classification, and status flags (partner, quarter, platform, PII handling, whether a resume is available, etc.).
 - `plan.md`: The orchestrator plan that was executed (or paused and resumed).
@@ -262,7 +286,12 @@ Every run stores all evidence under `agentic_systems/core/audit/runs/<run-id>/`.
 - `tool_calls.jsonl`: An ordered, sanitized log of each tool invocation for auditing and troubleshooting.
 - `resume_state.json`: When the orchestrator pauses for a partner correction, this file captures the state needed to resume execution once the corrected file arrives.
 - `secure_link_code.txt`: The shareable code tied to the simulated SharePoint secure link.
-- `sharepoint_simulation/`: The simulated SharePoint structure. Inside you will find `internal/<run-id>/link.json` and `partner_accessible/<run-id>/link.json` (both pointing to `outputs/partner_error_report.xlsx`) plus `uploads/<run-id>/`, which is the directory watched for corrected files (the demo run keeps the corrected file there as `parnter_error_report_corrected.csv`).
+
+**SharePoint Simulation Structure** (at repo root `agentic_systems/sharepoint_simulation/`):
+- `sharepoint_simulation/uploads/{partner_name}/`: Single source of truth for all file operations:
+  - **Initial files**: Partner data files uploaded for processing (e.g., `Example Quarterly Data Report.mock.csv`)
+  - **Corrected files**: Partner corrected files after validation errors (e.g., `partner_error_report_corrected.csv`)
+  - **Error report publishing**: Contains `link.json` metadata pointing to the canonical `outputs/partner_error_report.xlsx` file in the evidence bundle (created after staff approval)
 
 Within the `outputs/` subfolder:
 
@@ -313,8 +342,8 @@ uv run python -m agentic_systems.cli.main run intake \
 **Example:**
 ```bash
 uv run python -m agentic_systems.cli.main run intake \
-  --file "data/masked/Example Quarterly Data Report.mock.csv" \
-  --partner demo \
+  --file "sharepoint_simulation/uploads/test-partner-1/Example Quarterly Data Report.mock.csv" \
+  --partner test-partner-1 \
   --quarter Q1 \
   --platform minimal
 ```
