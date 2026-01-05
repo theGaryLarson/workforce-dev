@@ -1,0 +1,116 @@
+# Partner-specific parsing configuration for test-partner-1
+# Based on "Example Quarterly Data Report.mock.csv" format
+
+partner: test-partner-1
+client: cfa
+version: 1.0.0
+
+# File structure configuration
+file_structure:
+  header_row: 1  # Headers are in row 1 (with multi-line descriptions)
+  data_start_row: 2  # Data starts at row 2
+  min_columns: 42  # A-AP columns
+  encoding_preferences:
+    - utf-8
+    - windows-1252
+    - latin-1
+
+# Date format configuration
+date_format: MM/DD/YYYY  # All dates in this format
+
+# Column name mappings: partner column names → canonical field names
+# These mappings are used to transform partner-specific column names to canonical field names
+# The canonical field names are then matched against client_spec.yaml canonical_mappings
+column_mappings:
+  # Basic participant information
+  "Last Name": "last_name"
+  "First Name": "first_name"
+  "Middle Name": "middle_name"
+  "Date of Birth (MM/DD/YYYY)": "date_of_birth"
+  
+  # Address information
+  "Address 1": "address_1"
+  "Address 2 (apt, etc.)": "address_2"
+  "City": "city"
+  "State (WA, etc.)": "state"
+  "Zip Code": "zip_code"
+  
+  # Contact information
+  "Phone": "phone"
+  "Email": "email"
+  
+  # Demographics
+  "Gender": "gender"
+  "Ethnicity": "ethnicity"
+  "Race": "race"
+  "Disability": "disability"
+  "Type of Disability": "type_of_disability"
+  "If type of disability is \"other\", please specify": "disability_other_specify"
+  "Veteran": "veteran"
+  "Highest Completed Education Level": "education_level"
+  "Other Priority Populations List": "priority_populations"
+  
+  # Training information
+  "Tech Role/Pathway Targeted": "tech_role_pathway"
+  "Training Start Date (MM/DD/YYYY)": "training_start_date"
+  "Training Exit Date (MM/DD/YYYY)": "training_exit_date"
+  "Current Program Status": "current_program_status"
+  "If Graduated/Completed, type of completion": "completion_type"
+  "If a noncompletion (Withdrawal/Termination), provide reason": "noncompletion_reason"
+  "If the reason for noncompletion is \"other\", please specify": "noncompletion_other_specify"
+  
+  # Enrollment flags
+  "Newly offered admittance this quarter? (note: May not have accepted/enrolled)": "newly_offered_admittance"
+  "Newly enrolled (for the first time) in program this quarter?": "newly_enrolled"
+  "Newly completed program this quarter?": "newly_completed"
+  "Newly withdrawn / terminated this quarter?": "newly_withdrawn"
+  
+  # Employment information
+  "Employment Status": "employment_status"
+  "Newly employed this quarter?": "newly_employed"
+  "If Employed, Job start date (MM/DD/YYYY)": "job_start_date"
+  "If Employed, Employment Type": "employment_type"
+  "If Earn and Learn Employment, specify type": "earn_and_learn_specify"
+  "If Employed, Job Occupation (NAICS code)": "job_occupation"
+  "If the job occupation is 'OTHER Computer Occupations' please specify": "job_occupation_other_specify"
+  "If Employed, Employer Name": "employer_name"
+  "If Employed, hourly earnings (ex. $25.00)": "hourly_earnings"
+  
+  # Wraparound services
+  "Wraparound services provided this quarter": "wraparound_services"
+  "If any other wraparound service was provided this quarter, please specify": "wraparound_services_other_specify"
+
+# Special handling for multi-line headers
+# Some columns have embedded descriptions spanning multiple lines
+# The actual column name is the first line, subsequent lines are descriptions
+multi_line_header_handling:
+  enabled: true
+  # When reading CSV, pandas will combine multi-line headers
+  # We need to extract just the first line as the column name
+  extract_first_line_only: true
+
+# Data transformations to apply after parsing
+transformations:
+  # Zip code handling
+  zip_code:
+    - type: string_conversion
+      description: "Convert to string, remove .0 suffix if present"
+  
+  # Date parsing
+  dates:
+    - fields:
+        - date_of_birth
+        - training_start_date
+        - training_exit_date
+        - job_start_date
+      format: MM/DD/YYYY
+  
+  # Priority populations: letter codes (a, b, c, etc.)
+  priority_populations:
+    - type: parse_letter_codes
+      description: "Parse comma-separated letter codes"
+  
+  # Wraparound services: letter codes
+  wraparound_services:
+    - type: parse_letter_codes
+      description: "Parse comma-separated letter codes"
