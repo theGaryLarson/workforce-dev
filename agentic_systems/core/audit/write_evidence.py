@@ -6,10 +6,13 @@ appends JSONL events directly as tools run.
 """
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Dict, List
 
 import pandas as pd
+
+from ..tools import ToolResult
 
 # Masked mock data is treated as Internal; PII is redacted per BRD Section 2.3
 # (comment in code, not JSON)
@@ -61,7 +64,17 @@ def write_manifest(
             manifest["coordinated_agent"] = "SimpleIntakeAgent"
     
     # Part 3: Check if HITL workflow was triggered per BRD FR-012
-    if run_results and run_results.get('_halted'):
+    # Check both top-level _halted and nested SimpleIntakeAgent _halted
+    halted = False
+    if run_results:
+        halted = run_results.get('_halted', False)
+        # Also check if SimpleIntakeAgent halted (when orchestrated)
+        if not halted and "SimpleIntakeAgent" in run_results:
+            intake_result = run_results["SimpleIntakeAgent"]
+            if isinstance(intake_result, ToolResult) and intake_result.data:
+                halted = intake_result.data.get('_halted', False)
+    
+    if halted:
         manifest["hitl_status"] = "halted"
         manifest["resume_available"] = True
         
