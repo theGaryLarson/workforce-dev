@@ -282,6 +282,7 @@ class OrchestratorAgent(BaseAgent):
 
         # Get expected column signature from original file (if available)
         expected_signature = None
+        original_file_path = None
         if self.evidence_dir:
             resume_state_path = self.evidence_dir / "resume_state.json"
         last_processed_mtime = None
@@ -311,6 +312,20 @@ class OrchestratorAgent(BaseAgent):
         for file_path in uploads_dir.iterdir():
             if not file_path.is_file():
                 continue
+            
+            # Skip link.json and other metadata files
+            if file_path.name == "link.json":
+                continue
+            
+            # Skip the original initial file - corrected files must be different files
+            if original_file_path:
+                try:
+                    orig_path = Path(original_file_path)
+                    # Compare resolved paths to handle symlinks and relative paths
+                    if file_path.resolve() == orig_path.resolve():
+                        continue
+                except Exception:
+                    pass
             
             file_sig = self._get_file_column_signature(file_path)
             if not file_sig:
@@ -393,42 +408,42 @@ class OrchestratorAgent(BaseAgent):
                 return steps
 
             # Plan next steps based on state
-                if self.state_data.state == OrchestratorState.AWAITING_PARTNER_UPLOAD:
+            if self.state_data and self.state_data.state == OrchestratorState.AWAITING_PARTNER_UPLOAD:
+                steps.append({
+                    "step": "wait_for_partner_correction",
+                    "tool": "wait_for_partner_correction",
+                    "args": {"run_id": run_id}
+                })
+            elif self.state_data.state == OrchestratorState.COMPLETED_OK:
+                steps.append({
+                    "step": "publish_error_report_internal",
+                    "tool": "publish_error_report_internal",
+                    "args": {"run_id": run_id}
+                })
+            elif self.state_data.state == OrchestratorState.HALTED_VALIDATION_ERRORS:
+                steps.append({
+                    "step": "publish_error_report_internal",
+                    "tool": "publish_error_report_internal",
+                    "args": {"run_id": run_id}
+                })
+            elif self.state_data.state == OrchestratorState.RESUMED_VALIDATION_FAILED_AGAIN:
+                if self.state_data.resume_attempt_count < 3:
+                    steps.append({
+                        "step": "publish_error_report_partner",
+                        "tool": "publish_error_report_partner",
+                        "args": {"run_id": run_id}
+                    })
                     steps.append({
                         "step": "wait_for_partner_correction",
                         "tool": "wait_for_partner_correction",
                         "args": {"run_id": run_id}
                     })
-                elif self.state_data.state == OrchestratorState.COMPLETED_OK:
+                else:
                     steps.append({
-                        "step": "publish_error_report_internal",
-                        "tool": "publish_error_report_internal",
+                        "step": "handle_persistent_failure",
+                        "tool": "handle_persistent_failure",
                         "args": {"run_id": run_id}
                     })
-                elif self.state_data.state == OrchestratorState.HALTED_VALIDATION_ERRORS:
-                    steps.append({
-                        "step": "publish_error_report_internal",
-                        "tool": "publish_error_report_internal",
-                        "args": {"run_id": run_id}
-                    })
-                elif self.state_data.state == OrchestratorState.RESUMED_VALIDATION_FAILED_AGAIN:
-                    if self.state_data.resume_attempt_count < 3:
-                        steps.append({
-                            "step": "publish_error_report_partner",
-                            "tool": "publish_error_report_partner",
-                            "args": {"run_id": run_id}
-                        })
-                        steps.append({
-                            "step": "wait_for_partner_correction",
-                            "tool": "wait_for_partner_correction",
-                            "args": {"run_id": run_id}
-                        })
-                    else:
-                        steps.append({
-                            "step": "handle_persistent_failure",
-                            "tool": "handle_persistent_failure",
-                            "args": {"run_id": run_id}
-                        })
         else:
             # New run - detect initial file and start intake
             initial_file = self._detect_initial_file(partner, quarter)

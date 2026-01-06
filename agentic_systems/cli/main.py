@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict
 import sys
 import time
+import json
 
 # Load .env files from repository root (before any imports that need env vars)
 # Loads .env first (shared defaults), then .env.local (user-specific overrides)
@@ -83,9 +84,12 @@ def main() -> None:
             return
         
         # Keep run_id pattern <partner>-<quarter>-<platform> per PRD-TRD Section 11.2
+        # NOTE: Don't create evidence_dir here - wait until partner is detected from file
+        # This prevents creating demo-Q1-minimal folder when actual partner is different
         run_id = f"{args.partner}-{args.quarter}-{args.platform}"
-        evidence_dir = base_dir / "core" / "audit" / "runs" / run_id
-        evidence_dir.mkdir(parents=True, exist_ok=True)
+        # Don't create evidence_dir yet - wait for file detection
+        # This prevents creating demo-Q1-minimal folder when actual partner is different
+        evidence_dir = None  # Will be set when partner is detected from file
         
         # SharePoint simulation root should be at repo root (agentic_systems/sharepoint_simulation/)
         # Simplified structure: sharepoint_simulation/uploads/{partner_name}/
@@ -100,9 +104,10 @@ def main() -> None:
         watch_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize orchestrator agent (partner_uploads_dir is now None - we use sharepoint_sim_root/uploads/)
+        # evidence_dir is None initially - will be set when partner is detected
         orchestrator = OrchestratorAgent(
             run_id=run_id,
-            evidence_dir=evidence_dir,
+            evidence_dir=None,  # Will be set when partner is detected from file
             sharepoint_sim_root=sharepoint_sim_root,
             partner_uploads_dir=None  # No longer used - files come from sharepoint_simulation/uploads/
         )
@@ -306,7 +311,6 @@ def main() -> None:
                             base_dir = Path(__file__).resolve().parents[1]
                             process_evidence_dir = base_dir / "core" / "audit" / "runs" / new_run_id
                             process_evidence_dir.mkdir(parents=True, exist_ok=True)
-                        
                         # Ensure orchestrator evidence_dir and run_id are set before execute()
                         # This ensures orchestrator steps are logged to the correct tool_calls.jsonl
                         self.orchestrator.evidence_dir = process_evidence_dir
@@ -359,8 +363,15 @@ def main() -> None:
                                 print(f"\nEvidence bundle at: {process_evidence_dir}")
                                 # Note: In production, this would stop the observer
                             else:
-                                # Print wait status
-                                waiting_steps = [s for s in plan_steps if 'wait' in s.get('step', '').lower()]
+                                # Re-plan AFTER evidence bundle is written to pick up updated manifest.json state
+                                # Temporarily disable corrected file detection to force wait step after approval
+                                # We want to wait for a NEW corrected file, not resume with an old one
+                                original_sharepoint_sim_root = self.orchestrator.sharepoint_sim_root
+                                self.orchestrator.sharepoint_sim_root = None  # Temporarily disable corrected file detection
+                                updated_plan_steps = self.orchestrator.plan(process_inputs)
+                                self.orchestrator.sharepoint_sim_root = original_sharepoint_sim_root  # Restore
+                                # Print wait status using updated plan
+                                waiting_steps = [s for s in updated_plan_steps if 'wait' in s.get('step', '').lower()]
                                 if waiting_steps:
                                     wait_step = waiting_steps[0]
                                     wait_tool = wait_step.get('tool', '')
@@ -488,8 +499,15 @@ def main() -> None:
                             print(f"\nEvidence bundle at: {evidence_dir}")
                             break
                         
-                        # If waiting, print status and continue polling
-                        waiting_steps = [s for s in plan_steps if 'wait' in s.get('step', '').lower()]
+                        # Re-plan AFTER evidence bundle is written to pick up updated manifest.json state
+                        # Temporarily disable corrected file detection to force wait step after approval
+                        # We want to wait for a NEW corrected file, not resume with an old one
+                        original_sharepoint_sim_root_polling = orchestrator.sharepoint_sim_root
+                        orchestrator.sharepoint_sim_root = None  # Temporarily disable corrected file detection
+                        updated_plan_steps = orchestrator.plan(inputs)
+                        orchestrator.sharepoint_sim_root = original_sharepoint_sim_root_polling  # Restore
+                        # If waiting, print status and continue polling (using updated plan)
+                        waiting_steps = [s for s in updated_plan_steps if 'wait' in s.get('step', '').lower()]
                         if waiting_steps:
                             wait_step = waiting_steps[0]
                             wait_tool = wait_step.get('tool', '')
