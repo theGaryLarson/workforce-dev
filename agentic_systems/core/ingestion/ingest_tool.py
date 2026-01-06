@@ -1,5 +1,6 @@
 """IngestPartnerFileTool per BRD FR-001 and PRD-TRD Section 5.4."""
 
+import csv
 import hashlib
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -63,17 +64,49 @@ class IngestPartnerFileTool:
                 if data_start_row > 1:
                     skiprows = list(range(header_row + 1, data_start_row - 1))
             
+            # Determine delimiter from parsing config or auto-detect
+            delimiter = None
+            if parsing_config and 'file_structure' in parsing_config:
+                file_structure = parsing_config['file_structure']
+                if 'delimiter' in file_structure:
+                    delimiter = file_structure['delimiter']
+            
             # Parse file per BRD FR-001 acceptance criteria
             if path.suffix.lower() == '.csv':
+                # Auto-detect delimiter if not specified in config
+                if delimiter is None:
+                    try:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            first_lines = [f.readline() for _ in range(3)]
+                        # Use csv.Sniffer for automatic delimiter detection
+                        sample = ''.join(first_lines[:3])
+                        sniffer = csv.Sniffer()
+                        try:
+                            delimiter = sniffer.sniff(sample, delimiters=',;\t|').delimiter
+                        except Exception:
+                            # Fallback: count delimiters in first line
+                            if first_lines:
+                                semicolon_count = first_lines[0].count(';')
+                                comma_count = first_lines[0].count(',')
+                                delimiter = ';' if semicolon_count > comma_count else ','
+                            else:
+                                delimiter = ','  # Default fallback
+                    except Exception:
+                        delimiter = ','  # Default fallback
+                
                 # Try multiple encodings per BRD FR-001
                 for encoding in encodings:
                     try:
-                        read_kwargs = {'encoding': encoding, 'header': header_row}
+                        read_kwargs = {'encoding': encoding, 'header': header_row, 'sep': delimiter}
                         if skiprows:
                             read_kwargs['skiprows'] = skiprows
                         df = pd.read_csv(file_path, **read_kwargs)
                         break
                     except UnicodeDecodeError:
+                        continue
+                    except Exception as e:
+                        if encoding == encodings[-1]:  # Last encoding, re-raise if not UnicodeDecodeError
+                            raise
                         continue
                 else:
                     return ToolResult(
