@@ -97,18 +97,24 @@ class TestUploadSharePointTool:
         assert tool.name == "UploadSharePointTool"
         assert callable(tool)
 
-    def test_upload_internal_folder(self):
-        """Test uploading to internal folder creates link.json."""
+    def test_upload_publish_folder_creates_link_json(self):
+        """Test uploading to publish folder creates link.json in uploads/{partner_name}/."""
         with tempfile.TemporaryDirectory() as tmpdir:
             evidence_dir = Path(tmpdir)
             file_path = evidence_dir / "test_file.xlsx"
             file_path.write_text("test content")
             
+            # Create outputs directory with error report
+            outputs_dir = evidence_dir / "outputs"
+            outputs_dir.mkdir()
+            error_report_path = outputs_dir / "partner_error_report.xlsx"
+            error_report_path.write_text("error report content")
+            
             tool = UploadSharePointTool()
             result = tool(
-                file_path=file_path,
-                folder_type="internal",
-                partner_name="demo",
+                file_path=error_report_path,
+                folder_type="publish",
+                partner_name="test-partner-1",
                 quarter="Q1",
                 run_id="test-run",
                 evidence_dir=evidence_dir,
@@ -119,40 +125,22 @@ class TestUploadSharePointTool:
             assert "sharepoint_url" in result.data
             assert "link_metadata_path" in result.data
             
-            # Verify link.json was created
+            # Verify link.json was created in uploads/{partner_name}/
             link_path = Path(result.data["link_metadata_path"])
             assert link_path.exists()
+            assert "uploads" in str(link_path)
+            assert "test-partner-1" in str(link_path)
             
             with open(link_path, 'r', encoding='utf-8') as f:
                 link_metadata = json.load(f)
             
-            assert link_metadata["partner_name"] == "demo"
+            assert link_metadata["partner_name"] == "test-partner-1"
             assert link_metadata["quarter"] == "Q1"
             assert link_metadata["run_id"] == "test-run"
-
-    def test_upload_partner_folder(self):
-        """Test uploading to partner folder creates link.json."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            evidence_dir = Path(tmpdir)
-            file_path = evidence_dir / "test_file.xlsx"
-            file_path.write_text("test content")
-            
-            tool = UploadSharePointTool()
-            result = tool(
-                file_path=file_path,
-                folder_type="partner",
-                partner_name="demo",
-                quarter="Q1",
-                run_id="test-run",
-                evidence_dir=evidence_dir,
-                demo_mode=True
-            )
-            
-            assert result.ok
-            assert "sharepoint_url" in result.data
+            assert "canonical_file_path" in link_metadata
 
     def test_upload_uploads_folder_copies_file(self):
-        """Test uploading to uploads folder copies the file."""
+        """Test uploading to uploads folder copies the file to uploads/{partner_name}/."""
         with tempfile.TemporaryDirectory() as tmpdir:
             evidence_dir = Path(tmpdir)
             file_path = evidence_dir / "corrected_file.csv"
@@ -162,7 +150,7 @@ class TestUploadSharePointTool:
             result = tool(
                 file_path=file_path,
                 folder_type="upload",
-                partner_name="demo",
+                partner_name="test-partner-1",
                 quarter="Q1",
                 run_id="test-run",
                 evidence_dir=evidence_dir,
@@ -172,11 +160,13 @@ class TestUploadSharePointTool:
             assert result.ok
             assert "local_path" in result.data
             
-            # Verify file was copied
+            # Verify file was copied to uploads/{partner_name}/
             copied_path = Path(result.data["local_path"])
             assert copied_path.exists()
             assert copied_path.read_text() == "corrected content"
-            assert "demo_Q1_corrected_file.csv" in str(copied_path)
+            assert "uploads" in str(copied_path)
+            assert "test-partner-1" in str(copied_path)
+            assert "test-partner-1_Q1_corrected_file.csv" in str(copied_path)
 
     def test_upload_invalid_folder_type(self):
         """Test that invalid folder_type returns error."""
